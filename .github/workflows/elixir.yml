@@ -49,9 +49,12 @@ jobs:
         run: mix format --check-formatted
       - name: Run Credo
         run: mix credo --strict
-      - name: Run Tests
+      - name: Run tests and check coverage
         run: bash ./check_coverage.sh
-      - name: Publish to coveralls.io
+      - name: Generate coverage report to be published to coveralls.io
+        run: mix lcov
+      - name: Publish coverage report to coveralls.io
         uses: coverallsapp/github-action@v1.1.2
         with:
+          path-to-lcov: ./cover/lcov.info
           github-token: ${{ github.token }}
