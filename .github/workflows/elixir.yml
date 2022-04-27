@@ -50,7 +50,7 @@ jobs:
       - name: Run Credo
         run: mix credo --strict
       - name: Run tests and check coverage
-        run: bash ./check_coverage.sh
+        run: mix coveralls
       - name: Generate coverage report to be published to coveralls.io
         run: mix lcov
       - name: Publish coverage report to coveralls.io
