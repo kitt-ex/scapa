@@ -1,5 +1,8 @@
 # Scapa
 
+![master](https://github.com/github/docs/actions/workflows/main.yml/badge.svg?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/brunvez/scapa/badge.svg)](https://coveralls.io/github/brunvez/scapa)
+
 **TODO: Add description**
 
 ## Installation

@@ -3,6 +3,8 @@ defmodule Scapa do
   Documentation for `Scapa`.
   """
 
+  @type world :: :world
+
   @doc """
   Hello world.
 
@@ -12,6 +14,7 @@ defmodule Scapa do
       :world
 
   """
+  @spec hello() :: world()
   def hello do
     :world
   end
