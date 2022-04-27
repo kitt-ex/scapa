@@ -51,7 +51,7 @@ jobs:
         run: mix credo --strict
       - name: Run Tests
         run: bash ./check_coverage.sh
-      - name: Coveralls Test
-        run: mix coveralls.github
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish to coveralls.io
+        uses: coverallsapp/github-action@v1.1.2
+        with:
+          github-token: ${{ github.token }}
