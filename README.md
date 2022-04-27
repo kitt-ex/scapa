@@ -1,6 +1,6 @@
 # Scapa
 
-![master](https://github.com/github/docs/actions/workflows/main.yml/badge.svg?branch=master)
+![master](https://github.com/brunvez/scapa/workflows/tests/badge.svg?branch=master)
 [![Coverage Status](https://coveralls.io/repos/github/brunvez/scapa/badge.svg?branch=master)](https://coveralls.io/github/brunvez/scapa?branch=master)
 
 **TODO: Add description**

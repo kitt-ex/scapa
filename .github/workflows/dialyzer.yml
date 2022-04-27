@@ -1,4 +1,4 @@
-name: Dialyzer
+name: dialyzer
 on: push
 
 jobs:
