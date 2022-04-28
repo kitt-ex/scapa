@@ -10,14 +10,16 @@ defmodule Scapa.VersionCalculatorTest do
       signature_a = {__MODULE__, :hello, 2, "hello(arg1, arg2)"}
       signature_b = {__MODULE__, :hello, 2, "hello(arg1, arg2)"}
 
-      assert VersionCalculator.calculate(%FunctionDefinition{signature: signature_a}) == VersionCalculator.calculate(%FunctionDefinition{signature: signature_b})
+      assert VersionCalculator.calculate(%FunctionDefinition{signature: signature_a}) ==
+               VersionCalculator.calculate(%FunctionDefinition{signature: signature_b})
     end
 
     test "returns a different version when the function signature changes" do
       signature_a = {__MODULE__, :hello, 1, "hello(arg1)"}
       signature_b = {__MODULE__, :hello, 2, "hello(arg1, arg2)"}
 
-      assert VersionCalculator.calculate(%FunctionDefinition{signature: signature_a}) != VersionCalculator.calculate(%FunctionDefinition{signature: signature_b})
+      assert VersionCalculator.calculate(%FunctionDefinition{signature: signature_a}) !=
+               VersionCalculator.calculate(%FunctionDefinition{signature: signature_b})
     end
   end
 end

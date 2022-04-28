@@ -4,9 +4,9 @@ defmodule Scapa.FunctionDefinition do
   @type signature() :: {module(), atom(), arity(), String.t()}
 
   @type t :: %__MODULE__{
-    signature: signature(),
-    version: nil | String.t()
-  }
+          signature: signature(),
+          version: nil | String.t()
+        }
 
   defstruct [:signature, :version]
 end
