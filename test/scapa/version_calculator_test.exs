@@ -2,8 +2,8 @@ defmodule Scapa.VersionCalculatorTest do
   use ExUnit.Case, async: true
   doctest Scapa.VersionCalculator
 
-  alias Scapa.VersionCalculator
   alias Scapa.FunctionDefinition
+  alias Scapa.VersionCalculator
 
   describe "calculate/1" do
     test "returns the same version for the same function signature" do
