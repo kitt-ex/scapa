@@ -11,11 +11,13 @@ defmodule Mix.Tasks.CoverageReport do
     mix_path = "#{path}/mix.exs" |> String.replace("//", "/")
     MixFileHelper.backup(mix_path)
 
+    ignore_paths = File.read!("coveralls.json") |> Jason.decode!() |> Map.get("skip_files")
+
     try do
       config = [
         test_coverage: [
           tool: LcovEx,
-          ignore_paths: ["test/", "lib/scapa/mix/tasks/coverage_report.ex"]
+          ignore_paths: ignore_paths
         ]
       ]
 
