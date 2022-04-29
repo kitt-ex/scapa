@@ -52,7 +52,7 @@ jobs:
       - name: Run tests and check coverage
         run: mix coveralls
       - name: Generate coverage report to be published to coveralls.io
-        run: mix lcov
+        run: mix coverage_report
       - name: Publish coverage report to coveralls.io
         uses: coverallsapp/github-action@v1.1.2
         with:

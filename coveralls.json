@@ -3,6 +3,7 @@
     "minimum_coverage": 85
   },
   "skip_files": [
-    "test/support"
+    "test/support",
+    "lib/scapa/mix/tasks/coverage_report.ex"
   ]
 }
