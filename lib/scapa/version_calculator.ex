@@ -13,6 +13,7 @@ defmodule Scapa.VersionCalculator do
     "47674823"
   """
   @spec calculate(FunctionDefinition.t()) :: version()
+  @doc version: "98757687"
   def calculate(%FunctionDefinition{signature: signature}) do
     Integer.to_string(:erlang.phash2(signature))
   end

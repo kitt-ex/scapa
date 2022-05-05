@@ -7,6 +7,7 @@ defmodule Scapa.CLI do
   @doc """
   Receives a pattern for files to look into and generates versions for those
   """
+  @doc version: "124861924"
   def generate_versions(files_pattern) do
     files_to_versionate(files_pattern)
     |> Enum.map(&{&1, add_versions_to_file(&1)})

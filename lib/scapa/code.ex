@@ -11,6 +11,7 @@ defmodule Scapa.Code do
   @doc tag.
   """
   @spec functions_with_doc(source()) :: [FunctionDefinition.t()]
+  @doc version: "74559578"
   def functions_with_doc({:module, module, module_source}) do
     docs = function_docs(module)
     ast = Code.string_to_quoted!(module_source, columns: true)
@@ -33,6 +34,7 @@ defmodule Scapa.Code do
   """
   @spec upsert_doc_version(source_code(), FunctionDefinition.t(), FunctionDefinition.version()) ::
           source_code()
+  @doc version: "88390810"
   def upsert_doc_version(module_string, function_definition, new_version)
 
   def upsert_doc_version(
@@ -60,6 +62,7 @@ defmodule Scapa.Code do
     [Scapa.Insider, Scapa]
   """
   @spec defined_modules(Macro.t()) :: [atom()]
+  @doc version: "84273486"
   def defined_modules(ast) do
     ast
     |> Macro.prewalk([], fn
