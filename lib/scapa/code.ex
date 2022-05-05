@@ -2,16 +2,29 @@ defmodule Scapa.Code do
   @moduledoc false
   alias Scapa.FunctionDefinition
 
-  @type source() :: {:module, module()}
+  @type source() :: {:module, module(), source_code()}
   @type source_code() :: String.t()
+  @type ast() :: Macro.t()
 
   @doc """
   Returns a FunctionDefinition for each function present in the source with a
   @doc tag.
   """
-  @spec functions_with_doc([source()]) :: [FunctionDefinition.t()]
-  def functions_with_doc(sources) do
-    Enum.flat_map(sources, fn {:module, module} -> docs_from_module(module) end)
+  @spec functions_with_doc(source()) :: [FunctionDefinition.t()]
+  def functions_with_doc({:module, module, module_source}) do
+    docs = function_docs(module)
+    ast = Code.string_to_quoted!(module_source, columns: true)
+
+    docs
+    |> Enum.filter(&has_doc?/1)
+    |> Enum.map(fn
+      {{:function, name, arity}, doc_start, [string_signature], _, metadata} ->
+        %FunctionDefinition{
+          signature: {module, name, arity, string_signature},
+          version: metadata[:version],
+          position: function_position(doc_start, ast)
+        }
+    end)
   end
 
   @doc """
@@ -24,23 +37,12 @@ defmodule Scapa.Code do
 
   def upsert_doc_version(
         module_string,
-        %FunctionDefinition{version: nil} = function_definition,
+        %FunctionDefinition{version: nil, position: {line, column}},
         new_version
       ) do
-    doc_start = doc_location(function_definition)
-    {line, column} = doc_tag_position(module_string, doc_start)
-
-    doc_tag =
-      String.duplicate(" ", column - 1) <>
-        Macro.to_string(
-          quote do
-            @doc version: unquote(new_version)
-          end
-        )
-
     module_string
     |> String.split("\n")
-    |> List.insert_at(line - 1, doc_tag)
+    |> List.insert_at(line - 1, String.duplicate(" ", column - 1) <> doc_tag(new_version))
     |> Enum.join("\n")
   end
 
@@ -50,38 +52,30 @@ defmodule Scapa.Code do
   end
 
   @doc """
-  Returns the line where the @doc tag is located for a given funtion
+  Returns the modules defined in an AST as modules.
+
+  ## Examples
+    iex> ast = quote do defmodule Scapa do defmodule Scapa.Insider, do: nil end end
+    iex> Scapa.Code.defined_modules(ast)
+    [Scapa.Insider, Scapa]
   """
-  @spec doc_location(FunctionDefinition.t()) :: nil | pos_integer()
-  def doc_location(%FunctionDefinition{signature: {module, name, arity, _}}) do
-    docs = function_docs(module)
+  @spec defined_modules(Macro.t()) :: [atom()]
+  def defined_modules(ast) do
+    ast
+    |> Macro.prewalk([], fn
+      {:defmodule, _, [{:__aliases__, _, module_name} | _]} = t, acc ->
+        {t, [module_name | acc]}
 
-    Enum.find_value(docs, fn
-      {{:function, ^name, ^arity}, line_number, _, _, _} -> line_number
-      _ -> nil
+      t, acc ->
+        {t, acc}
     end)
+    |> elem(1)
+    |> Enum.map(&Enum.join(["Elixir"] ++ &1, "."))
+    |> Enum.map(&String.to_existing_atom/1)
   end
 
-  defp docs_from_module(module) do
-    docs = function_docs(module)
-
-    docs
-    |> Enum.filter(&has_doc?/1)
-    |> Enum.map(fn
-      {{:function, name, arity}, _, [string_signature], _, metadata} ->
-        %FunctionDefinition{
-          signature: {module, name, arity, string_signature},
-          version: metadata[:version]
-        }
-    end)
-  end
-
-  defp has_doc?({_, _, _, doc_content, _}) when doc_content in [:none, :hidden], do: false
-  defp has_doc?(_), do: true
-
-  defp doc_tag_position(module_string, doc_start) do
-    module_string
-    |> Code.string_to_quoted!(columns: true)
+  defp function_position(doc_start, ast) do
+    ast
     |> Macro.prewalk([], fn
       {:def, [line: line, column: column], _} = t, acc when line >= doc_start ->
         {t, [{line, column} | acc]}
@@ -93,9 +87,20 @@ defmodule Scapa.Code do
     |> Enum.min()
   end
 
+  defp has_doc?({_, _, _, doc_content, _}) when doc_content in [:none, :hidden], do: false
+  defp has_doc?(_), do: true
+
   defp function_docs(module) do
     {:docs_v1, _, :elixir, _, _, _, docs} = Code.fetch_docs(module)
 
     docs
+  end
+
+  defp doc_tag(version) do
+    Macro.to_string(
+      quote do
+        @doc version: unquote(version)
+      end
+    )
   end
 end
