@@ -17,12 +17,13 @@ jobs:
         uses: actions/cache@v2
         with:
           path: |
+            priv/plts/*
             _build/dev/*.plt
             _build/dev/*.plt.hash
           key: plt-cache-${{ steps.set_vars.outputs.mix_hash }}
           restore-keys: |
             plt-cache-
-      - name: Run Dialyzer
+      - name: Setup Project
         uses: erlef/setup-elixir@v1
         with:
           otp-version: '24.1.7'
