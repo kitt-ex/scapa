@@ -4,7 +4,7 @@
   },
   "skip_files": [
     "test/support",
-    "lib/scapa/mix/tasks/coverage_report.ex",
+    "lib/mix/tasks/coverage_report.ex",
     "lib/mix"
   ]
 }

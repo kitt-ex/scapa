@@ -74,7 +74,7 @@ defmodule Scapa.Code do
     end)
     |> elem(1)
     |> Enum.map(&Enum.join(["Elixir"] ++ &1, "."))
-    |> Enum.map(&String.to_existing_atom/1)
+    |> Enum.map(&String.to_atom/1)
   end
 
   defp function_position(doc_start, ast) do
