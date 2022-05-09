@@ -4,6 +4,11 @@
 ### New features
 
 ### Bug fixes
+
+
+## 0.1.1 (2022-05-09)
+
+### Bug fixes
 - Fix `mix scapa.gen.versions` not running due to compilation not being required.
 
 ## 0.1.0 (2022-05-09)

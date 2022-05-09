@@ -1,11 +1,13 @@
 defmodule Scapa.MixProject do
   use Mix.Project
 
+  @version "0.1.1"
+
   def project do
     [
       app: :scapa,
       name: "Scapa",
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -54,6 +56,7 @@ defmodule Scapa.MixProject do
   defp docs do
     [
       main: "Scapa",
+      source_ref: "v#{@version}",
       extras: ["README.md", "CHANGELOG.md"]
     ]
   end
