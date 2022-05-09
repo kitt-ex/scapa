@@ -1,9 +1,9 @@
 defmodule Mix.Tasks.CoverageReport do
+  @moduledoc false
+  @shortdoc "Generate coverage report"
+
   use Mix.Task
   alias LcovEx.MixFileHelper
-
-  @shortdoc "Generate coverage report"
-  @moduledoc @shortdoc
 
   @doc false
   def run(args) do
