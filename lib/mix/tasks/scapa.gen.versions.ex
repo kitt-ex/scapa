@@ -7,6 +7,8 @@ defmodule Mix.Tasks.Scapa.Gen.Versions do
 
   use Mix.Task
 
+  @requirements ["compile"]
+
   alias Scapa.Config
 
   @doc false
@@ -14,7 +16,6 @@ defmodule Mix.Tasks.Scapa.Gen.Versions do
   def run(_argv) do
     config = Config.fetch_config()
 
-    for {path, content} <- Scapa.CLI.generate_versions(config),
-        do: File.write(path, content)
+    for {path, content} <- Scapa.CLI.generate_versions(config), do: File.write(path, content)
   end
 end
