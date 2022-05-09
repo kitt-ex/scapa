@@ -1,11 +1,13 @@
 defmodule Mix.Tasks.Scapa.Gen.Versions do
   @moduledoc false
 
-  @default_file_pattern "lib/**/*.ex"
+  alias Scapa.Config
 
   @doc false
   def run(_argv) do
-    for {path, content} <- Scapa.CLI.generate_versions(@default_file_pattern),
+    config = Config.fetch_config()
+
+    for {path, content} <- Scapa.CLI.generate_versions(config),
         do: File.write(path, content)
   end
 end

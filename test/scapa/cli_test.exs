@@ -2,10 +2,13 @@ defmodule Scapa.CLITest do
   use ExUnit.Case, async: true
 
   alias Scapa.CLI
+  alias Scapa.Config
+
+  @config %Config{include: ["test/support/*.ex"]}
 
   describe "generate_versions/1" do
     test "returns the file location and new source code wih versions" do
-      [module_with_doc, module_with_hidden_doc] = CLI.generate_versions("test/support/*.ex")
+      [module_with_doc, module_with_hidden_doc] = CLI.generate_versions(@config)
 
       assert String.ends_with?(elem(module_with_doc, 0), "/support/module_with_doc.ex")
 
