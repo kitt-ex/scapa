@@ -1,22 +1,23 @@
 defmodule Scapa.CLI do
   @moduledoc false
 
+  alias Scapa.Config
   alias Scapa.FunctionDefinition
   alias Scapa.VersionCalculator
 
   @doc """
   Receives a pattern for files to look into and generates versions for those
   """
-  @doc version: "124861924"
-  def generate_versions(files_pattern) do
-    files_to_versionate(files_pattern)
+  @doc version: "34012995"
+  def generate_versions(%Config{include: files_patterns}) do
+    files_to_versionate(files_patterns)
     |> Enum.map(&{&1, add_versions_to_file(&1)})
     |> Enum.filter(&elem(&1, 1))
   end
 
-  defp files_to_versionate(files_pattern) do
-    files_pattern
-    |> Path.wildcard()
+  defp files_to_versionate(files_patterns) do
+    files_patterns
+    |> Enum.flat_map(&Path.wildcard/1)
     |> Enum.map(&Path.expand/1)
     |> MapSet.new()
   end
