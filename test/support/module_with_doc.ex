@@ -23,5 +23,22 @@ defmodule Scapa.ModuleWithDoc do
 
   def public_no_doc, do: nil
 
+  @doc "Multiple arities 1"
+  def multiple_arities(_a), do: nil
+
+  @doc "Multiple arities 2"
+  def multiple_arities(_a, _b), do: nil
+
+  @doc "Public with guard"
+  def public_with_guard(a) when is_atom(a), do: nil
+
+  @doc "Simple macro"
+  defmacro macro(_a, _b, _c), do: nil
+
+  @doc "Macro with guard"
+  defmacro __using__(which) when is_atom(which) and not is_nil(which) do
+    apply(__MODULE__, which, [])
+  end
+
   defp private_fun, do: nil
 end
