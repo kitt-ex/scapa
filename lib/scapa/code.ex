@@ -57,26 +57,29 @@ defmodule Scapa.Code do
 
   @doc """
   Returns the modules defined in an AST as modules.
-
-  ## Examples
-    iex> ast = quote do defmodule Scapa do defmodule Scapa.Insider, do: nil end end
-    iex> Scapa.Code.defined_modules(ast)
-    [Scapa.Insider, Scapa]
   """
-  @spec defined_modules(Macro.t()) :: [atom()]
+  @spec defined_modules(Macro.t(), [String.t()]) :: [atom()]
   @doc version: "84273486"
-  def defined_modules(ast) do
+  def defined_modules(ast, prefix \\ ["Elixir"]) do
     ast
     |> Macro.prewalk([], fn
-      {:defmodule, _, [{:__aliases__, _, module_name} | _]} = t, acc ->
-        {t, [module_name | acc]}
+      {:defmodule, _, [{:__aliases__, _, module_name} | inner]} = t, acc ->
+        module_name = Enum.map(module_name, &Atom.to_string/1)
+        inner_modules = defined_modules(inner, prefix ++ module_name)
+        acc = inner_modules ++ acc
+
+        case get_module(module_name, prefix) do
+          {:module, module} ->
+            {t, [module | acc]}
+
+          {:error, _} ->
+            {t, acc}
+        end
 
       t, acc ->
         {t, acc}
     end)
     |> elem(1)
-    |> Enum.map(&Enum.join(["Elixir"] ++ &1, "."))
-    |> Enum.map(&String.to_existing_atom/1)
   end
 
   defp functions_defined_in_source(module_source) do
@@ -136,5 +139,15 @@ defmodule Scapa.Code do
         @doc version: unquote(version)
       end
     )
+  end
+
+  defp get_module(name, prefix) do
+    (prefix ++ name)
+    |> Enum.join(".")
+    |> String.to_existing_atom()
+    |> Code.ensure_compiled()
+  rescue
+    ArgumentError ->
+      {:error, :nonexistent_atom}
   end
 end

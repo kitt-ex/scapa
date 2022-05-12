@@ -147,6 +147,12 @@ defmodule Scapa.CodeTest do
 
       assert [] = function_docs(docs, :private_fun)
     end
+
+    test "does not include type docs", %{Scapa.ModuleWithTypedoc => module_source} do
+      docs = Code.functions_with_doc({:module, Scapa.ModuleWithTypedoc, module_source})
+
+      assert [] = function_docs(docs, :num)
+    end
   end
 
   describe "upsert_doc_version/3" do
@@ -213,36 +219,29 @@ defmodule Scapa.CodeTest do
       assert [Scapa] = Code.defined_modules(ast)
     end
 
-    test "returns nested modules" do
-      ast =
-        quote do
-          defmodule Scapa do
-            defmodule Scapa.Insider, do: nil
-          end
-        end
+    test "returns nested modules and sibling modules" do
+      ast = Elixir.Code.string_to_quoted!(File.read!("test/support/nested_module.ex"))
 
-      assert [Scapa.Insider, Scapa] = Code.defined_modules(ast)
-    end
-
-    test "returns sibling modules" do
-      ast =
-        quote do
-          defmodule Scapa, do: nil
-          defmodule Scapa.Sibling, do: nil
-        end
-
-      assert [Scapa.Sibling, Scapa] = Code.defined_modules(ast)
+      assert [
+               NestedModule,
+               NestedModule.Sibling,
+               NestedModule.Level1.AndSomethingElse,
+               NestedModule.Level1.AndSomethingElse.Level2
+             ] = Code.defined_modules(ast)
     end
   end
 
   setup_all do
     module_with_doc = File.read!(Path.absname("../support/module_with_doc.ex", __DIR__))
 
+    module_with_typedoc = File.read!(Path.absname("../support/module_with_typedoc.ex", __DIR__))
+
     module_with_hidden_doc =
       File.read!(Path.absname("../support/module_with_hidden_doc.ex", __DIR__))
 
     %{
       Scapa.ModuleWithDoc => module_with_doc,
+      Scapa.ModuleWithTypedoc => module_with_typedoc,
       Scapa.ModuleWithHiddenDoc => module_with_hidden_doc
     }
   end
