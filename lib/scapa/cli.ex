@@ -25,7 +25,7 @@ defmodule Scapa.CLI do
   defp add_versions_to_file(file_path) do
     file_content = File.read!(file_path)
 
-    case funtions_to_versionate(file_content) do
+    case funtions_to_versionate(file_content, file_path) do
       [] ->
         nil
 
@@ -40,9 +40,9 @@ defmodule Scapa.CLI do
     end
   end
 
-  defp funtions_to_versionate(file_contents) do
+  defp funtions_to_versionate(file_contents, file_path) do
     file_contents
-    |> Code.string_to_quoted!()
+    |> Code.string_to_quoted!(file: file_path)
     |> Scapa.Code.defined_modules()
     |> Enum.flat_map(&Scapa.Code.functions_with_doc({:module, &1, file_contents}))
     |> Enum.sort_by(&FunctionDefinition.line_number/1)

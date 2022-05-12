@@ -6,6 +6,7 @@
 
 ### Bug fixes
 - Fix multiple versions or errors for injected functions
+- Fix error on project with nested modules
 
 ## 0.1.1 (2022-05-09)
 
