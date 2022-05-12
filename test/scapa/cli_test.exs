@@ -41,6 +41,28 @@ defmodule Scapa.CLITest do
 
                def public_no_doc, do: nil
 
+               @doc "Multiple arities 1"
+               @doc version: "11060830"
+               def multiple_arities(_a), do: nil
+
+               @doc "Multiple arities 2"
+               @doc version: "76143507"
+               def multiple_arities(_a, _b), do: nil
+
+               @doc "Public with guard"
+               @doc version: "58040676"
+               def public_with_guard(a) when is_atom(a), do: nil
+
+               @doc "Simple macro"
+               @doc version: "40986300"
+               defmacro macro(_a, _b, _c), do: nil
+
+               @doc "Macro with guard"
+               @doc version: "84650413"
+               defmacro __using__(which) when is_atom(which) and not is_nil(which) do
+                 apply(__MODULE__, which, [])
+               end
+
                defp private_fun, do: nil
              end
              """

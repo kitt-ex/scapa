@@ -75,6 +75,67 @@ defmodule Scapa.CodeTest do
                )
     end
 
+    test "returns functions with multiple arities", %{Scapa.ModuleWithDoc => module_source} do
+      assert [
+               %FunctionDefinition{
+                 signature: {Scapa.ModuleWithDoc, :multiple_arities, 1, "multiple_arities(a)"},
+                 position: {27, 3},
+                 version: nil
+               },
+               %FunctionDefinition{
+                 position: {30, 3},
+                 signature: {Scapa.ModuleWithDoc, :multiple_arities, 2, "multiple_arities(a, b)"},
+                 version: nil
+               }
+             ] =
+               function_docs(
+                 Code.functions_with_doc({:module, Scapa.ModuleWithDoc, module_source}),
+                 :multiple_arities
+               )
+    end
+
+    test "returns functions with guards", %{Scapa.ModuleWithDoc => module_source} do
+      assert [
+               %FunctionDefinition{
+                 position: {33, 3},
+                 signature: {Scapa.ModuleWithDoc, :public_with_guard, 1, "public_with_guard(a)"},
+                 version: nil
+               }
+             ] =
+               function_docs(
+                 Code.functions_with_doc({:module, Scapa.ModuleWithDoc, module_source}),
+                 :public_with_guard
+               )
+    end
+
+    test "returns macros", %{Scapa.ModuleWithDoc => module_source} do
+      assert [
+               %FunctionDefinition{
+                 position: {36, 3},
+                 signature: {Scapa.ModuleWithDoc, :macro, 3, "macro(a, b, c)"},
+                 version: nil
+               }
+             ] =
+               function_docs(
+                 Code.functions_with_doc({:module, Scapa.ModuleWithDoc, module_source}),
+                 :macro
+               )
+    end
+
+    test "returns macros with guards", %{Scapa.ModuleWithDoc => module_source} do
+      assert [
+               %FunctionDefinition{
+                 position: {39, 3},
+                 signature: {Scapa.ModuleWithDoc, :__using__, 1, "__using__(which)"},
+                 version: nil
+               }
+             ] =
+               function_docs(
+                 Code.functions_with_doc({:module, Scapa.ModuleWithDoc, module_source}),
+                 :__using__
+               )
+    end
+
     test "does not include functions without doc", %{Scapa.ModuleWithDoc => module_source} do
       docs = Code.functions_with_doc({:module, Scapa.ModuleWithDoc, module_source})
 

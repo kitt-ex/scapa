@@ -2,9 +2,10 @@
 ## master (unreleased)
 
 ### New features
+- Version macro docs
 
 ### Bug fixes
-
+- Fix multiple versions or errors for injected functions
 
 ## 0.1.1 (2022-05-09)
 
