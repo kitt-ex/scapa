@@ -59,7 +59,7 @@ defmodule Scapa.Code do
   Returns the modules defined in an AST as modules.
   """
   @spec defined_modules(Macro.t(), [String.t()]) :: [atom()]
-  @doc version: "84273486"
+  @doc version: "94221322"
   def defined_modules(ast, prefix \\ ["Elixir"]) do
     ast
     |> Macro.prewalk([], fn

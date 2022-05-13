@@ -5,17 +5,25 @@ defmodule Scapa.CLI do
   alias Scapa.FunctionDefinition
   alias Scapa.VersionCalculator
 
+  @type result ::
+          {:ok, content(), path()}
+          | {:ok, :no_changes, path()}
+          | {:error, formatted_error_message(), path()}
+  @typep content :: String.t()
+  @typep path :: String.t()
+  @typep formatted_error_message :: String.t()
+
   @doc """
   Receives a pattern for files to look into and generates versions for those
   """
   @doc version: "34012995"
+  @spec generate_versions(Config.t()) :: [result()]
   def generate_versions(%Config{include: files_patterns}) do
-    files_to_versionate(files_patterns)
-    |> Enum.map(&{&1, add_versions_to_file(&1)})
-    |> Enum.filter(&elem(&1, 1))
+    files_to_version(files_patterns)
+    |> Enum.map(&add_versions_to_file/1)
   end
 
-  defp files_to_versionate(files_patterns) do
+  defp files_to_version(files_patterns) do
     files_patterns
     |> Enum.flat_map(&Path.wildcard/1)
     |> Enum.map(&Path.expand/1)
@@ -24,23 +32,31 @@ defmodule Scapa.CLI do
 
   defp add_versions_to_file(file_path) do
     file_content = File.read!(file_path)
+    function_definitions = functions_to_version(file_content, file_path)
 
-    case funtions_to_versionate(file_content, file_path) do
-      [] ->
-        nil
+    case upsert_docs_in_file(function_definitions, file_content) do
+      ^file_content ->
+        {:ok, :no_changes, file_path}
 
-      function_definitions ->
-        Enum.reduce(function_definitions, file_content, fn function_definition, content ->
-          Scapa.Code.upsert_doc_version(
-            content,
-            function_definition,
-            VersionCalculator.calculate(function_definition)
-          )
-        end)
+      new_content when is_binary(new_content) ->
+        {:ok, new_content, file_path}
     end
+  rescue
+    e ->
+      {:error, Exception.format(:error, e, Enum.slice(__STACKTRACE__, 0, 5)), file_path}
   end
 
-  defp funtions_to_versionate(file_contents, file_path) do
+  defp upsert_docs_in_file(function_definitions, file_content) do
+    Enum.reduce(function_definitions, file_content, fn function_definition, content ->
+      Scapa.Code.upsert_doc_version(
+        content,
+        function_definition,
+        VersionCalculator.calculate(function_definition)
+      )
+    end)
+  end
+
+  defp functions_to_version(file_contents, file_path) do
     file_contents
     |> Code.string_to_quoted!(file: file_path)
     |> Scapa.Code.defined_modules()
