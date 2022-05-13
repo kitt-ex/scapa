@@ -3,6 +3,8 @@
 
 ### New features
 - Version macro docs
+- Does not override unchanged files
+- Shows errors per file
 
 ### Bug fixes
 - Fix multiple versions or errors for injected functions

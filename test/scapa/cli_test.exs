@@ -8,9 +8,9 @@ defmodule Scapa.CLITest do
 
   describe "generate_versions/1" do
     test "returns the file location and new source code wih versions" do
-      [module_with_doc, module_with_hidden_doc] = CLI.generate_versions(@config)
-
-      assert String.ends_with?(elem(module_with_doc, 0), "/support/module_with_doc.ex")
+      results = CLI.generate_versions(@config)
+      module_with_doc = find_file_result(results, "/support/module_with_doc.ex")
+      module_with_hidden_doc = find_file_result(results, "/support/module_with_hidden_doc.ex")
 
       assert elem(module_with_doc, 1) == """
              defmodule Scapa.ModuleWithDoc do
@@ -67,11 +67,6 @@ defmodule Scapa.CLITest do
              end
              """
 
-      assert String.ends_with?(
-               elem(module_with_hidden_doc, 0),
-               "/support/module_with_hidden_doc.ex"
-             )
-
       assert elem(module_with_hidden_doc, 1) == """
              defmodule Scapa.ModuleWithHiddenDoc do
                @moduledoc false
@@ -82,5 +77,16 @@ defmodule Scapa.CLITest do
              end
              """
     end
+
+    test "returns no_changes if there's no changes to be saved" do
+      results = CLI.generate_versions(@config)
+
+      assert {:ok, :no_changes, _full_path} =
+               find_file_result(results, "/support/module_with_typedoc.ex")
+    end
+  end
+
+  defp find_file_result(results, file_name) do
+    Enum.find(results, fn {_, _, path} -> String.ends_with?(path, file_name) end)
   end
 end
