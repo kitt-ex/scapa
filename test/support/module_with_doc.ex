@@ -9,7 +9,7 @@ defmodule Scapa.ModuleWithDoc do
 
   @doc "Public with version"
   @doc version: "abc"
-  def public_with_version, do: nil
+  def public_with_version, do: private_fun()
 
   @doc "Multiple def"
   def multiple_def(1), do: 2

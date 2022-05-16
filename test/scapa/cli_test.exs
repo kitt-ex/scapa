@@ -25,7 +25,7 @@ defmodule Scapa.CLITest do
 
                @doc "Public with version"
                @doc version: "27952351"
-               def public_with_version, do: nil
+               def public_with_version, do: private_fun()
 
                @doc "Multiple def"
                @doc version: "30685952"

@@ -55,6 +55,37 @@ defmodule Scapa.Code do
     Regex.replace(~r/version:\W*"#{old_version}"/, module_string, ~s{version: "#{new_version}"})
   end
 
+  def get_change(
+        module_string,
+        %FunctionDefinition{version: nil, position: {line, _}},
+        new_version,
+        file_path
+      ) do
+    function = get_function_string(module_string, line)
+    {:ok, :missing_version, new_version, function, file_path}
+  end
+
+  def get_change(
+        module_string,
+        %FunctionDefinition{version: old_version, position: {line, _}},
+        new_version,
+        file_path
+      )
+      when not is_nil(old_version) and new_version != old_version do
+    function = get_function_string(module_string, line)
+    {:ok, :outdated_version, new_version, function, file_path}
+  end
+
+  def get_change(_, _, _, _), do: nil
+
+  defp get_function_string(module_string, line) do
+    module_string
+    |> String.split("\n")
+    |> Enum.drop(line - 1)
+    |> Enum.take(5)
+    |> Enum.join("\n")
+  end
+
   @doc """
   Returns the modules defined in an AST as modules.
   """
