@@ -63,6 +63,10 @@ defmodule Scapa.CLITest do
                  apply(__MODULE__, which, [])
                end
 
+               @doc "Multiple arities 2"
+               @doc version: "77051701"
+               def multiple_arities_documented(_a, _b), do: nil
+
                defp private_fun, do: nil
              end
              """

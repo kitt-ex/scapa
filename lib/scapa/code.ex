@@ -76,7 +76,9 @@ defmodule Scapa.Code do
     {:ok, :outdated_version, new_version, function, file_path}
   end
 
-  def get_change(_, _, _, _), do: nil
+  def get_change(_, %FunctionDefinition{version: old_version}, new_version, _)
+      when new_version == old_version,
+      do: nil
 
   defp get_function_string(module_string, line) do
     module_string

@@ -40,7 +40,7 @@ defmodule Mix.Tasks.Scapa do
         IO.puts("#{red()}File #{file_path} has a function with missing version number.")
 
         IO.puts(
-          "#{reset()}You should add #{bright()}@version \"#{version}\"#{reset()} on top of the following function:"
+          "#{reset()}You should add #{bright()}@doc version: \"#{version}\"#{reset()} on top of the following function:"
         )
 
         IO.puts(function)
@@ -52,7 +52,7 @@ defmodule Mix.Tasks.Scapa do
         IO.puts("#{red()}File #{file_path} has a function with an outdated version number.")
 
         IO.puts(
-          "#{reset()}You should update the version tag with #{bright()}@version \"#{version}\"#{reset()} on the following function:"
+          "#{reset()}You should update the version tag with #{bright()}@doc version: \"#{version}\"#{reset()} on the following function:"
         )
 
         IO.puts(function)
