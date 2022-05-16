@@ -11,10 +11,10 @@ defmodule Scapa.CLI do
           | {:error, formatted_error_message(), path()}
 
   @type verbose_result ::
-        {:ok, :no_changes, path()}
-        | {:error, formatted_error_message(), path()}
-        | {:ok, :outdated_version, version(), function_string(), path()}
-        | {:ok, :missing_version, version(), function_string(), path()}
+          {:ok, :no_changes, path()}
+          | {:error, formatted_error_message(), path()}
+          | {:ok, :outdated_version, version(), function_string(), path()}
+          | {:ok, :missing_version, version(), function_string(), path()}
   @typep content :: String.t()
   @typep path :: String.t()
   @typep formatted_error_message :: String.t()
