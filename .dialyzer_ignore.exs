@@ -1,3 +1,3 @@
 [
-  {"lib/scapa/mix/tasks/coverage_report.ex"}
+  {"lib/mix/tasks/coverage_report.ex"}
 ]
