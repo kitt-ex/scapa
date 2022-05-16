@@ -32,7 +32,7 @@ defmodule Scapa.CLI do
   end
 
   @spec generate_versions(Config.t(), true) :: [verbose_result()]
-  def generate_versions(%Config{include: files_patterns}, _patch = true) do
+  def generate_versions(%Config{include: files_patterns}, _verbose = true) do
     files_to_version(files_patterns)
     |> Enum.map(&get_functions_that_change/1)
     |> List.flatten()

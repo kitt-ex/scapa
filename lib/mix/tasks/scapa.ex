@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Scapa do
 
     results =
       config
-      |> Scapa.CLI.generate_versions(_patch = true)
+      |> Scapa.CLI.generate_versions(_verbose = true)
       |> Enum.group_by(&key_for_result/1)
 
     if is_nil(results[:errors]) do

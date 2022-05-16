@@ -86,7 +86,36 @@ defmodule Scapa.CLITest do
     end
   end
 
+  describe "generate_versions/2" do
+    test "returns verbose data about the changes" do
+      results = CLI.generate_versions(@config, _verbose = true)
+
+      {:ok, _, no_changes_file_path} = find_result_by_type(results, :no_changes)
+
+      {:ok, _, _, missing_version_function, missing_version_file_path} =
+        find_result_by_type(results, :missing_version)
+
+      {:ok, _, _, outdated_version_function, outdated_version_file_path} =
+        find_result_by_type(results, :outdated_version)
+
+      assert no_changes_file_path =~ "module_with_typedoc.ex"
+      assert missing_version_file_path =~ "module_with_doc.ex"
+      assert missing_version_function =~ "defmacro __using__(which)"
+      assert outdated_version_file_path =~ "module_with_doc.ex"
+      assert outdated_version_function =~ "def public_with_version, do:"
+    end
+  end
+
   defp find_file_result(results, file_name) do
     Enum.find(results, fn {_, _, path} -> String.ends_with?(path, file_name) end)
+  end
+
+  defp find_result_by_type(results, type) do
+    Enum.find(results, fn r ->
+      case r do
+        {_, t, _} -> t == type
+        {_, t, _, _, _} -> t == type
+      end
+    end)
   end
 end
