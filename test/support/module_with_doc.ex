@@ -9,7 +9,7 @@ defmodule Scapa.ModuleWithDoc do
 
   @doc "Public with version"
   @doc version: "abc"
-  def public_with_version, do: nil
+  def public_with_version, do: private_fun()
 
   @doc "Multiple def"
   def multiple_def(1), do: 2
@@ -39,6 +39,10 @@ defmodule Scapa.ModuleWithDoc do
   defmacro __using__(which) when is_atom(which) and not is_nil(which) do
     apply(__MODULE__, which, [])
   end
+
+  @doc "Multiple arities 2"
+  @doc version: "77051701"
+  def multiple_arities_documented(_a, _b), do: nil
 
   defp private_fun, do: nil
 end

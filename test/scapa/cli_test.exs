@@ -25,7 +25,7 @@ defmodule Scapa.CLITest do
 
                @doc "Public with version"
                @doc version: "27952351"
-               def public_with_version, do: nil
+               def public_with_version, do: private_fun()
 
                @doc "Multiple def"
                @doc version: "30685952"
@@ -63,6 +63,10 @@ defmodule Scapa.CLITest do
                  apply(__MODULE__, which, [])
                end
 
+               @doc "Multiple arities 2"
+               @doc version: "77051701"
+               def multiple_arities_documented(_a, _b), do: nil
+
                defp private_fun, do: nil
              end
              """
@@ -86,7 +90,36 @@ defmodule Scapa.CLITest do
     end
   end
 
+  describe "generate_versions/2" do
+    test "returns verbose data about the changes" do
+      results = CLI.generate_versions(@config, _verbose = true)
+
+      {:ok, _, no_changes_file_path} = find_result_by_type(results, :no_changes)
+
+      {:ok, _, _, missing_version_function, missing_version_file_path} =
+        find_result_by_type(results, :missing_version)
+
+      {:ok, _, _, outdated_version_function, outdated_version_file_path} =
+        find_result_by_type(results, :outdated_version)
+
+      assert no_changes_file_path =~ "module_with_typedoc.ex"
+      assert missing_version_file_path =~ "module_with_doc.ex"
+      assert missing_version_function =~ "defmacro __using__(which)"
+      assert outdated_version_file_path =~ "module_with_doc.ex"
+      assert outdated_version_function =~ "def public_with_version, do:"
+    end
+  end
+
   defp find_file_result(results, file_name) do
     Enum.find(results, fn {_, _, path} -> String.ends_with?(path, file_name) end)
+  end
+
+  defp find_result_by_type(results, type) do
+    Enum.find(results, fn r ->
+      case r do
+        {_, t, _} -> t == type
+        {_, t, _, _, _} -> t == type
+      end
+    end)
   end
 end
