@@ -34,7 +34,7 @@ defmodule Scapa.CLI do
   @spec generate_versions(Config.t(), true) :: [verbose_result()]
   def generate_versions(%Config{include: files_patterns}, _verbose = true) do
     files_to_version(files_patterns)
-    |> Enum.map(&get_functions_that_change/1)
+    |> Enum.map(&get_functions_that_changed/1)
     |> List.flatten()
   end
 
@@ -45,7 +45,7 @@ defmodule Scapa.CLI do
     |> MapSet.new()
   end
 
-  defp get_functions_that_change(file_path) do
+  defp get_functions_that_changed(file_path) do
     file_content = File.read!(file_path)
     function_definitions = functions_to_version(file_content, file_path)
     get_changes_in_file(function_definitions, file_content, file_path)
