@@ -11,7 +11,7 @@ defmodule Scapa.Code do
   @doc tag.
   """
   @spec functions_with_doc(source()) :: [FunctionDefinition.t()]
-  @doc version: "74559578"
+  @doc version: "NzQ1NTk1Nzg"
   def functions_with_doc({:module, module, module_source}) do
     docs = function_docs(module)
     source_functions = functions_defined_in_source(module_source)
@@ -36,7 +36,7 @@ defmodule Scapa.Code do
   """
   @spec upsert_doc_version(source_code(), FunctionDefinition.t(), FunctionDefinition.version()) ::
           source_code()
-  @doc version: "88390810"
+  @doc version: "ODgzOTA4MTA"
   def upsert_doc_version(module_string, function_definition, new_version)
 
   def upsert_doc_version(
@@ -92,7 +92,7 @@ defmodule Scapa.Code do
   Returns the modules defined in an AST as modules.
   """
   @spec defined_modules(Macro.t(), [String.t()]) :: [atom()]
-  @doc version: "94221322"
+  @doc version: "OTQyMjEzMjI"
   def defined_modules(ast, prefix \\ ["Elixir"]) do
     ast
     |> Macro.prewalk([], fn

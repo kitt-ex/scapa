@@ -20,20 +20,20 @@ defmodule Scapa.CLITest do
                \"""
 
                @doc "Public with doc"
-               @doc version: "75335224"
+               @doc version: "NzUzMzUyMjQ"
                def public_with_doc, do: nil
 
                @doc "Public with version"
-               @doc version: "27952351"
+               @doc version: "Mjc5NTIzNTE"
                def public_with_version, do: private_fun()
 
                @doc "Multiple def"
-               @doc version: "30685952"
+               @doc version: "MzA2ODU5NTI"
                def multiple_def(1), do: 2
                def multiple_def("2"), do: 4
 
                @doc "Multiple def with default"
-               @doc version: "119275990"
+               @doc version: "MTE5Mjc1OTkw"
                def multiple_def_with_default(num \\\\ 42)
 
                def multiple_def_with_default(1), do: 2
@@ -42,29 +42,29 @@ defmodule Scapa.CLITest do
                def public_no_doc, do: nil
 
                @doc "Multiple arities 1"
-               @doc version: "11060830"
+               @doc version: "MTEwNjA4MzA"
                def multiple_arities(_a), do: nil
 
                @doc "Multiple arities 2"
-               @doc version: "76143507"
+               @doc version: "NzYxNDM1MDc"
                def multiple_arities(_a, _b), do: nil
 
                @doc "Public with guard"
-               @doc version: "58040676"
+               @doc version: "NTgwNDA2NzY"
                def public_with_guard(a) when is_atom(a), do: nil
 
                @doc "Simple macro"
-               @doc version: "40986300"
+               @doc version: "NDA5ODYzMDA"
                defmacro macro(_a, _b, _c), do: nil
 
                @doc "Macro with guard"
-               @doc version: "84650413"
+               @doc version: "ODQ2NTA0MTM"
                defmacro __using__(which) when is_atom(which) and not is_nil(which) do
                  apply(__MODULE__, which, [])
                end
 
                @doc "Multiple arities 2"
-               @doc version: "77051701"
+               @doc version: "NzcwNTE3MDE"
                def multiple_arities_documented(_a, _b), do: nil
 
                defp private_fun, do: nil
@@ -76,7 +76,7 @@ defmodule Scapa.CLITest do
                @moduledoc false
 
                @doc "Public with doc"
-               @doc version: "67474296"
+               @doc version: "Njc0NzQyOTY"
                def public_with_doc, do: nil
              end
              """
@@ -115,11 +115,6 @@ defmodule Scapa.CLITest do
   end
 
   defp find_result_by_type(results, type) do
-    Enum.find(results, fn r ->
-      case r do
-        {_, t, _} -> t == type
-        {_, t, _, _, _} -> t == type
-      end
-    end)
+    Enum.find(results, fn result -> elem(result, 1) == type end)
   end
 end

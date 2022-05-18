@@ -15,7 +15,7 @@ defmodule Scapa do
 
   """
   @spec hello() :: world()
-  @doc version: "59627563"
+  @doc version: "NTk2Mjc1NjM"
   def hello do
     :world
   end
