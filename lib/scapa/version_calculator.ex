@@ -10,11 +10,14 @@ defmodule Scapa.VersionCalculator do
   ## Examples
 
     iex> Scapa.VersionCalculator.calculate(%Scapa.FunctionDefinition{signature: {Scapa.VersionCalculator, :hello, 1, "hello(arg1)"}})
-    "47674823"
+    "NDc2NzQ4MjM"
   """
   @spec calculate(FunctionDefinition.t()) :: version()
-  @doc version: "98757687"
+  @doc version: "OTg3NTc2ODc"
   def calculate(%FunctionDefinition{signature: signature}) do
-    Integer.to_string(:erlang.phash2(signature))
+    signature
+    |> :erlang.phash2()
+    |> Integer.to_string()
+    |> Base.encode64(padding: false)
   end
 end

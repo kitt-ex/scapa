@@ -23,6 +23,6 @@ defmodule Scapa.FunctionDefinition do
     42
   """
   @spec line_number(t()) :: line()
-  @doc version: "63656950"
+  @doc version: "NjM2NTY5NTA"
   def line_number(%__MODULE__{position: {line, _column}}), do: line
 end

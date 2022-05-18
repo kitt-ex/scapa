@@ -41,7 +41,7 @@ defmodule Scapa.ModuleWithDoc do
   end
 
   @doc "Multiple arities 2"
-  @doc version: "77051701"
+  @doc version: "NzcwNTE3MDE"
   def multiple_arities_documented(_a, _b), do: nil
 
   defp private_fun, do: nil

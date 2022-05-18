@@ -24,7 +24,7 @@ defmodule Scapa.CLI do
   @doc """
   Receives a pattern for files to look into and generates versions for those
   """
-  @doc version: "34012995"
+  @doc version: "MzQwMTI5OTU"
   @spec generate_versions(Config.t()) :: [result()]
   def generate_versions(%Config{include: files_patterns}) do
     files_to_version(files_patterns)
