@@ -68,7 +68,7 @@ defmodule Scapa.MixProject do
       files:
         Enum.reject(
           Path.wildcard("lib/**/*.ex"),
-          &(&1 == "lib/scapa/mix/tasks/coverage_report.ex")
+          &(&1 == "lib/mix/tasks/coverage_report.ex")
         ) ++ ~w(.formatter.exs mix.exs README.md LICENSE CHANGELOG.md),
       links: %{
         "GitHub" => "https://github.com/brunvez/scapa",

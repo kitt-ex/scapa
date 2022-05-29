@@ -31,64 +31,6 @@ defmodule Scapa.Code do
   end
 
   @doc """
-  Updates the doc on the given module source code for a funtions definition with the
-  passed new version. If the version did not previosly exist then it's inserted.
-  """
-  @spec upsert_doc_version(source_code(), FunctionDefinition.t(), FunctionDefinition.version()) ::
-          source_code()
-  @doc version: "ODgzOTA4MTA"
-  def upsert_doc_version(module_string, function_definition, new_version)
-
-  def upsert_doc_version(
-        module_string,
-        %FunctionDefinition{version: nil, position: {line, column}},
-        new_version
-      ) do
-    module_string
-    |> String.split("\n")
-    |> List.insert_at(line - 1, String.duplicate(" ", column - 1) <> doc_tag(new_version))
-    |> Enum.join("\n")
-  end
-
-  def upsert_doc_version(module_string, %FunctionDefinition{version: old_version}, new_version)
-      when not is_nil(old_version) do
-    Regex.replace(~r/version:\W*"#{old_version}"/, module_string, ~s{version: "#{new_version}"})
-  end
-
-  def get_change(
-        module_string,
-        %FunctionDefinition{version: nil, position: {line, _}},
-        new_version,
-        file_path
-      ) do
-    function = get_function_string(module_string, line)
-    {:ok, :missing_version, new_version, function, file_path}
-  end
-
-  def get_change(
-        module_string,
-        %FunctionDefinition{version: old_version, position: {line, _}},
-        new_version,
-        file_path
-      )
-      when not is_nil(old_version) and new_version != old_version do
-    function = get_function_string(module_string, line)
-    {:ok, :outdated_version, new_version, function, file_path}
-  end
-
-  def get_change(_, %FunctionDefinition{version: old_version}, new_version, _)
-      when new_version == old_version,
-      do: nil
-
-  defp get_function_string(module_string, line) do
-    module_string
-    |> String.split("\n")
-    |> Enum.drop(line - 1)
-    |> Enum.take(5)
-    |> Enum.join("\n")
-  end
-
-  @doc """
   Returns the modules defined in an AST as modules.
   """
   @spec defined_modules(Macro.t(), [String.t()]) :: [atom()]
@@ -164,14 +106,6 @@ defmodule Scapa.Code do
       {{def_type, _, _}, _, _, _, _} when def_type in [:function, :macro] -> true
       _ -> false
     end)
-  end
-
-  defp doc_tag(version) do
-    Macro.to_string(
-      quote do
-        @doc version: unquote(version)
-      end
-    )
   end
 
   defp get_module(name, prefix) do

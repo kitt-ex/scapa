@@ -3,118 +3,98 @@ defmodule Scapa.CLITest do
 
   alias Scapa.CLI
   alias Scapa.Config
+  alias Scapa.SourceFile
 
   @config %Config{include: ["test/support/*.ex"]}
 
   describe "generate_versions/1" do
     test "returns the file location and new source code wih versions" do
-      results = CLI.generate_versions(@config)
-      module_with_doc = find_file_result(results, "/support/module_with_doc.ex")
-      module_with_hidden_doc = find_file_result(results, "/support/module_with_hidden_doc.ex")
+      {:ok, source_files} = CLI.generate_versions(@config)
+      module_with_doc = find_file_source(source_files, "/support/module_with_doc.ex")
 
-      assert elem(module_with_doc, 1) == """
-             defmodule Scapa.ModuleWithDoc do
-               @moduledoc \"""
-               Test module used to test the returned function definitions and
-               the corresponding version.
-               \"""
+      module_with_hidden_doc =
+        find_file_source(source_files, "/support/module_with_hidden_doc.ex")
 
-               @doc "Public with doc"
-               @doc version: "NzUzMzUyMjQ"
-               def public_with_doc, do: nil
+      assert [
+               {:insert, 7, "  @doc version: \"NzUzMzUyMjQ\"", _},
+               {:insert, 14, "  @doc version: \"MzA2ODU5NTI\"", _},
+               {:insert, 18, "  @doc version: \"MTE5Mjc1OTkw\"", _},
+               {:insert, 26, "  @doc version: \"MTEwNjA4MzA\"", _},
+               {:insert, 29, "  @doc version: \"NzYxNDM1MDc\"", _},
+               {:insert, 32, "  @doc version: \"NTgwNDA2NzY\"", _},
+               {:insert, 35, "  @doc version: \"NDA5ODYzMDA\"", _},
+               {:insert, 38, "  @doc version: \"ODQ2NTA0MTM\"", _},
+               {:update, 10, "  @doc version: \"Mjc5NTIzNTE\"", _}
+             ] = Enum.to_list(module_with_doc.changeset)
 
-               @doc "Public with version"
-               @doc version: "Mjc5NTIzNTE"
-               def public_with_version, do: private_fun()
-
-               @doc "Multiple def"
-               @doc version: "MzA2ODU5NTI"
-               def multiple_def(1), do: 2
-               def multiple_def("2"), do: 4
-
-               @doc "Multiple def with default"
-               @doc version: "MTE5Mjc1OTkw"
-               def multiple_def_with_default(num \\\\ 42)
-
-               def multiple_def_with_default(1), do: 2
-               def multiple_def_with_default(2), do: 4
-
-               def public_no_doc, do: nil
-
-               @doc "Multiple arities 1"
-               @doc version: "MTEwNjA4MzA"
-               def multiple_arities(_a), do: nil
-
-               @doc "Multiple arities 2"
-               @doc version: "NzYxNDM1MDc"
-               def multiple_arities(_a, _b), do: nil
-
-               @doc "Public with guard"
-               @doc version: "NTgwNDA2NzY"
-               def public_with_guard(a) when is_atom(a), do: nil
-
-               @doc "Simple macro"
-               @doc version: "NDA5ODYzMDA"
-               defmacro macro(_a, _b, _c), do: nil
-
-               @doc "Macro with guard"
-               @doc version: "ODQ2NTA0MTM"
-               defmacro __using__(which) when is_atom(which) and not is_nil(which) do
-                 apply(__MODULE__, which, [])
-               end
-
-               @doc "Multiple arities 2"
-               @doc version: "NzcwNTE3MDE"
-               def multiple_arities_documented(_a, _b), do: nil
-
-               defp private_fun, do: nil
-             end
-             """
-
-      assert elem(module_with_hidden_doc, 1) == """
-             defmodule Scapa.ModuleWithHiddenDoc do
-               @moduledoc false
-
-               @doc "Public with doc"
-               @doc version: "Njc0NzQyOTY"
-               def public_with_doc, do: nil
-             end
-             """
+      assert [
+               {:insert, 4, "  @doc version: \"Njc0NzQyOTY\"", _}
+             ] = Enum.to_list(module_with_hidden_doc.changeset)
     end
 
-    test "returns no_changes if there's no changes to be saved" do
-      results = CLI.generate_versions(@config)
+    test "returns an empty list if there's no changes to be saved" do
+      {:ok, source_files} = CLI.generate_versions(@config)
 
-      assert {:ok, :no_changes, _full_path} =
-               find_file_result(results, "/support/module_with_typedoc.ex")
+      %SourceFile{changeset: changeset} =
+        find_file_source(source_files, "/support/module_with_typedoc.ex")
+
+      assert [] = Enum.to_list(changeset)
     end
   end
 
-  describe "generate_versions/2" do
-    test "returns verbose data about the changes" do
-      results = CLI.generate_versions(@config, _verbose = true)
+  describe "check_versions/1" do
+    test "returns changes for missing versions" do
+      {:ok, results} = CLI.check_versions(@config)
 
-      {:ok, _, no_changes_file_path} = find_result_by_type(results, :no_changes)
+      {_source_file, changes} = find_file_source(results, "/support/module_with_hidden_doc.ex")
 
-      {:ok, _, _, missing_version_function, missing_version_file_path} =
-        find_result_by_type(results, :missing_version)
+      [{:insert, change_origin_function, change_line, current_content, new_content}] = changes
 
-      {:ok, _, _, outdated_version_function, outdated_version_file_path} =
-        find_result_by_type(results, :outdated_version)
+      assert %Scapa.FunctionDefinition{
+               position: {5, 3},
+               signature: {Scapa.ModuleWithHiddenDoc, :public_with_doc, 0, "public_with_doc()"},
+               version: nil
+             } = change_origin_function
 
-      assert no_changes_file_path =~ "module_with_typedoc.ex"
-      assert missing_version_file_path =~ "module_with_doc.ex"
-      assert missing_version_function =~ "defmacro __using__(which)"
-      assert outdated_version_file_path =~ "module_with_doc.ex"
-      assert outdated_version_function =~ "def public_with_version, do:"
+      assert 4 = change_line
+
+      assert ["  def public_with_doc, do: nil", "end", ""] = current_content
+      assert ~s(  @doc version: "Njc0NzQyOTY") = new_content
+    end
+
+    test "returns changes for missing functions" do
+      {:ok, results} = CLI.check_versions(@config)
+
+      {_source_file, changes} = find_file_source(results, "/support/module_with_doc.ex")
+
+      {:update, change_origin_function, change_line, current_content, new_content} =
+        Enum.find(changes, &(elem(&1, 0) == :update))
+
+      assert %Scapa.FunctionDefinition{
+               position: {12, 3},
+               signature: {Scapa.ModuleWithDoc, :public_with_version, 0, "public_with_version()"},
+               version: "abc"
+             } = change_origin_function
+
+      assert 10 = change_line
+
+      assert [~s(  @doc version: "abc"), "  def public_with_version, do: private_fun()", ""] =
+               current_content
+
+      assert ~s(  @doc version: "Mjc5NTIzNTE") = new_content
+    end
+
+    test "returns an empty list when there are no changes" do
+      {:ok, results} = CLI.check_versions(@config)
+
+      assert {_source_file, []} = find_file_source(results, "/support/module_with_typedoc.ex")
     end
   end
 
-  defp find_file_result(results, file_name) do
-    Enum.find(results, fn {_, _, path} -> String.ends_with?(path, file_name) end)
-  end
-
-  defp find_result_by_type(results, type) do
-    Enum.find(results, fn result -> elem(result, 1) == type end)
+  defp find_file_source(results, file_name) do
+    Enum.find(results, fn
+      %SourceFile{path: path} -> String.ends_with?(path, file_name)
+      {%SourceFile{path: path}, _updates} -> String.ends_with?(path, file_name)
+    end)
   end
 end

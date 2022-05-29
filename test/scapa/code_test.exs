@@ -155,60 +155,6 @@ defmodule Scapa.CodeTest do
     end
   end
 
-  describe "upsert_doc_version/3" do
-    test "updates the version when it exists", %{Scapa.ModuleWithDoc => module_source} do
-      function_definition = %FunctionDefinition{
-        signature: {Scapa.ModuleWithDoc, :public_with_version, 0, "public_with_version()"},
-        version: "abc"
-      }
-
-      output = Code.upsert_doc_version(module_source, function_definition, "new_version")
-
-      assert String.contains?(output, ~s(@doc version: "new_version"))
-      refute String.contains?(output, ~s(@doc version: "abc"))
-    end
-
-    test "does not add version tags when updating", %{Scapa.ModuleWithDoc => module_source} do
-      function_definition = %FunctionDefinition{
-        signature: {Scapa.ModuleWithDoc, :public_with_version, 0, "public_with_version()"},
-        version: "abc"
-      }
-
-      output = Code.upsert_doc_version(module_source, function_definition, "new_version")
-
-      assert version_tags_count(output) == version_tags_count(module_source)
-    end
-
-    test "adds the the version when it does not exist", %{Scapa.ModuleWithDoc => module_source} do
-      function_definition = %FunctionDefinition{
-        signature: {Scapa.ModuleWithDoc, :public_with_doc, 0, "public_with_doc()"},
-        position: {8, 3}
-      }
-
-      output =
-        Code.upsert_doc_version(module_source, function_definition, "public_function_version")
-
-      function_fragment = cut_source(output, 6..8)
-
-      assert function_fragment ==
-               ~s(  @doc "Public with doc"\n  @doc version: "public_function_version"\n  def public_with_doc, do: nil)
-    end
-
-    test "does not add multiple version tags when inserting", %{
-      Scapa.ModuleWithDoc => module_source
-    } do
-      function_definition = %FunctionDefinition{
-        signature: {Scapa.ModuleWithDoc, :public_with_doc, 0, "public_with_doc()"},
-        position: {8, 3}
-      }
-
-      output =
-        Code.upsert_doc_version(module_source, function_definition, "public_function_version")
-
-      assert version_tags_count(output) == version_tags_count(module_source) + 1
-    end
-  end
-
   describe "defined_modules/1" do
     test "returns single modules" do
       ast =
@@ -250,16 +196,5 @@ defmodule Scapa.CodeTest do
     Enum.filter(docs, fn %FunctionDefinition{signature: {_, name, _, _}} ->
       name == function_name
     end)
-  end
-
-  defp cut_source(source, range) do
-    source
-    |> String.split("\n")
-    |> Enum.slice(range)
-    |> Enum.join("\n")
-  end
-
-  defp version_tags_count(source) do
-    Enum.count(Regex.scan(~r/version: ".*"/, source))
   end
 end

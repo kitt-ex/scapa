@@ -1,74 +1,73 @@
 defmodule Mix.Tasks.Scapa do
-  @moduledoc false
+  @shortdoc "Validates that doc versions are up to date"
+  @moduledoc """
+  TODO
+  """
 
   use Mix.Task
 
   @requirements ["compile"]
 
   alias Scapa.Config
+  alias Scapa.FunctionDefinition
+  alias Scapa.SourceFile
 
   @doc false
   def run(_argv) do
     config = Config.fetch_config()
 
-    results =
-      config
-      |> Scapa.CLI.generate_versions(_verbose = true)
-      |> Enum.group_by(&key_for_result/1)
+    case Scapa.CLI.check_versions(config) do
+      {:ok, updates} ->
+        updates
+        |> Enum.map(&make_path_relative/1)
+        |> Enum.each(&show_update/1)
 
-    if is_nil(results[:errors]) do
-      show_results(results)
-    else
-      show_errors(results[:errors])
+      {:error, errors} ->
+        show_errors(errors)
     end
   end
 
-  defp key_for_result({:ok, :no_changes, _file_path}), do: :no_changes
-  defp key_for_result({:error, _error, _file_path}), do: :errors
-  defp key_for_result({:ok, :missing_version, _, _, _}), do: :missing_versions
-  defp key_for_result({:ok, :outdated_version, _, _, _}), do: :outdated_versions
+  defp show_update({%SourceFile{path: file_path}, []}),
+    do: IO.puts(green("File #{file_path} is up to date."))
 
-  defp show_results(results) do
-    if results[:no_changes] do
-      for {_, _, file_path} <- results[:no_changes] do
-        IO.puts("#{green()}File #{file_path} is up to date.")
-      end
-    end
+  defp show_update({%SourceFile{path: file_path}, updates}) do
+    IO.puts(red("File #{file_path} has a function with a missing or outdated version number."))
 
-    if results[:missing_versions] do
-      for {_, _, version, function, file_path} <- results[:missing_versions] do
-        IO.puts("#{red()}File #{file_path} has a function with missing version number.")
+    Enum.each(updates, fn {operation, function_definition, line_number, chunk, new_content} ->
+      needed_change =
+        if operation == :insert do
+          List.insert_at(chunk, 0, bright(new_content))
+        else
+          List.replace_at(chunk, 0, bright(new_content))
+        end
 
-        IO.puts(
-          "#{reset()}You should add #{bright()}@doc version: \"#{version}\"#{reset()} on top of the following function:"
-        )
+      IO.puts(
+        "#{show_file_line(file_path, line_number)} #{show_function(function_definition)} #{if operation == :insert, do: "missing version", else: "outdated version"}"
+      )
 
-        IO.puts(function)
-      end
-    end
-
-    if results[:outdated_versions] do
-      for {_, _, version, function, file_path} <- results[:outdated_versions] do
-        IO.puts("#{red()}File #{file_path} has a function with an outdated version number.")
-
-        IO.puts(
-          "#{reset()}You should update the version tag with #{bright()}@doc version: \"#{version}\"#{reset()} on the following function:"
-        )
-
-        IO.puts(function)
-      end
-    end
+      IO.puts(Enum.join(needed_change, "\n"))
+    end)
   end
 
   defp show_errors(errors) do
-    for {:error, message, path} <- errors do
+    for {:error, reason, path} <- errors do
       IO.puts(path)
-      IO.puts(message)
+      IO.puts(to_string(reason))
     end
   end
 
-  defp red, do: IO.ANSI.red()
-  defp green, do: IO.ANSI.green()
-  defp bright, do: IO.ANSI.bright()
+  defp show_function(%FunctionDefinition{signature: {module, name, arity, _}}) do
+    Exception.format_mfa(module, name, arity)
+  end
+
+  def make_path_relative({%SourceFile{path: file_path} = source_file, changes}) do
+    {%{source_file | path: Path.relative_to_cwd(file_path)}, changes}
+  end
+
+  def show_file_line(path, line), do: Exception.format_file_line(path, line)
+
+  defp red(str), do: IO.ANSI.red() <> str <> reset()
+  defp green(str), do: IO.ANSI.green() <> str <> reset()
+  defp bright(str), do: IO.ANSI.bright() <> str <> reset()
   defp reset, do: IO.ANSI.reset()
 end

@@ -3,104 +3,78 @@ defmodule Scapa.CLI do
 
   alias Scapa.Config
   alias Scapa.FunctionDefinition
-  alias Scapa.VersionCalculator
+  alias Scapa.SourceFile
 
-  @type result ::
-          {:ok, content(), path()}
-          | {:ok, :no_changes, path()}
-          | {:error, formatted_error_message(), path()}
+  @type change ::
+          {SourceFile.operation(), FunctionDefinition.t(), SourceFile.line_number(),
+           SourceFile.content(), SourceFile.content_line()}
 
-  @type verbose_result ::
-          {:ok, :no_changes, path()}
-          | {:error, formatted_error_message(), path()}
-          | {:ok, :outdated_version, version(), function_string(), path()}
-          | {:ok, :missing_version, version(), function_string(), path()}
-  @typep content :: String.t()
-  @typep path :: String.t()
-  @typep formatted_error_message :: String.t()
-  @typep version :: String.t()
-  @typep function_string :: String.t()
+  @type error :: {:error, term(), SourceFile.path()}
 
   @doc """
-  Receives a pattern for files to look into and generates versions for those
+  Generates versions for files based on the given configuration.
   """
   @doc version: "MzQwMTI5OTU"
-  @spec generate_versions(Config.t()) :: [result()]
+  @spec generate_versions(Config.t()) :: {:ok, [SourceFile.t()]} | {:error, [error()]}
   def generate_versions(%Config{include: files_patterns}) do
-    files_to_version(files_patterns)
-    |> Enum.map(&add_versions_to_file/1)
+    source_files = load_source_files(files_patterns)
+
+    case Enum.filter(source_files, &(elem(&1, 0) == :error)) do
+      [] ->
+        {:ok,
+         source_files
+         |> Enum.map(&elem(&1, 1))
+         |> Enum.map(&SourceFile.generate_doc_version_changes/1)}
+
+      errors ->
+        {:error, errors}
+    end
   end
 
-  @spec generate_versions(Config.t(), true) :: [verbose_result()]
-  def generate_versions(%Config{include: files_patterns}, _verbose = true) do
-    files_to_version(files_patterns)
-    |> Enum.map(&get_functions_that_changed/1)
-    |> List.flatten()
+  @doc """
+  Returns up to date and outdated versions for functions based on the given configuration.
+  """
+  @doc version: "MTE5ODExODg"
+  @spec check_versions(Config.t()) :: {:ok, [change()]} | {:error, [error()]}
+  def check_versions(%Config{include: files_patterns}) do
+    source_files = load_source_files(files_patterns)
+
+    case Enum.filter(source_files, &(elem(&1, 0) == :error)) do
+      [] ->
+        {:ok,
+         source_files
+         |> Enum.map(&elem(&1, 1))
+         |> Enum.map(&SourceFile.generate_doc_version_changes/1)
+         |> Enum.map(&get_changes_to_make/1)}
+
+      errors ->
+        {:error, errors}
+    end
   end
 
-  defp files_to_version(files_patterns) do
-    files_patterns
+  defp load_source_files(file_patterns) do
+    file_patterns
     |> Enum.flat_map(&Path.wildcard/1)
     |> Enum.map(&Path.expand/1)
     |> MapSet.new()
-  end
-
-  defp get_functions_that_changed(file_path) do
-    file_content = File.read!(file_path)
-    function_definitions = functions_to_version(file_content, file_path)
-    get_changes_in_file(function_definitions, file_content, file_path)
-  end
-
-  defp get_changes_in_file(function_definitions, file_content, file_path) do
-    case add_versions_to_file(file_path) do
-      {:ok, :no_changes, _file_path} = no_changes ->
-        no_changes
-
-      _new_content ->
-        Enum.map(function_definitions, fn function_definition ->
-          Scapa.Code.get_change(
-            file_content,
-            function_definition,
-            VersionCalculator.calculate(function_definition),
-            file_path
-          )
-        end)
-        |> Enum.reject(&is_nil/1)
-    end
-  end
-
-  defp add_versions_to_file(file_path) do
-    file_content = File.read!(file_path)
-    function_definitions = functions_to_version(file_content, file_path)
-
-    case upsert_docs_in_file(function_definitions, file_content) do
-      ^file_content ->
-        {:ok, :no_changes, file_path}
-
-      new_content when is_binary(new_content) ->
-        {:ok, new_content, file_path}
-    end
-  rescue
-    e ->
-      {:error, Exception.format(:error, e, Enum.slice(__STACKTRACE__, 0, 5)), file_path}
-  end
-
-  defp upsert_docs_in_file(function_definitions, file_content) do
-    Enum.reduce(function_definitions, file_content, fn function_definition, content ->
-      Scapa.Code.upsert_doc_version(
-        content,
-        function_definition,
-        VersionCalculator.calculate(function_definition)
-      )
+    |> Enum.map(fn path ->
+      case SourceFile.load_from_path(path) do
+        {:ok, _} = result -> result
+        {:error, reason} -> {:error, reason, path}
+      end
     end)
   end
 
-  defp functions_to_version(file_contents, file_path) do
-    file_contents
-    |> Code.string_to_quoted!(file: file_path)
-    |> Scapa.Code.defined_modules()
-    |> Enum.flat_map(&Scapa.Code.functions_with_doc({:module, &1, file_contents}))
-    |> Enum.sort_by(&FunctionDefinition.line_number/1)
-    |> Enum.reverse()
+  defp get_changes_to_make(%SourceFile{changeset: changeset} = source_file) do
+    updates =
+      changeset
+      |> Enum.map(fn {operation, line_number, new_content, metadata} ->
+        chunk = SourceFile.get_chunk(source_file, line_number: line_number, lines: 3)
+
+        {operation, metadata[:origin], line_number, chunk, new_content}
+      end)
+      |> Enum.sort_by(fn {_, _, line_number, _, _} -> line_number end)
+
+    {source_file, updates}
   end
 end

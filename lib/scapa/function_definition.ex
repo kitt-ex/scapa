@@ -23,6 +23,17 @@ defmodule Scapa.FunctionDefinition do
     42
   """
   @spec line_number(t()) :: line()
-  @doc version: "NjM2NTY5NTA"
+  @doc version: "NDg0NjQzNTY"
   def line_number(%__MODULE__{position: {line, _column}}), do: line
+
+  @doc """
+  Returns the column number for a function definition
+
+  ## Example
+    iex> Scapa.FunctionDefinition.column_number(%Scapa.FunctionDefinition{position: {42, 8}})
+    8
+  """
+  @spec column_number(t()) :: column()
+  @doc version: "NDg0NjQzNTY"
+  def column_number(%__MODULE__{position: {_line, column}}), do: column
 end
