@@ -10,36 +10,31 @@ defmodule Mix.Tasks.Scapa.Gen.Versions do
   @requirements ["compile"]
 
   alias Scapa.Config
+  alias Scapa.SourceFile
 
   @doc false
   @impl Mix.Task
   def run(_argv) do
     config = Config.fetch_config()
 
-    results =
-      config
-      |> Scapa.CLI.generate_versions()
-      |> Enum.group_by(&key_for_result/1)
-
-    if is_nil(results[:errors]) do
-      override_files(results[:override])
-    else
-      show_errors(results[:errors])
+    case Scapa.CLI.generate_versions(config) do
+      {:ok, source_files} -> override_files(source_files)
+      {:error, errors} -> show_errors(errors)
     end
   end
 
-  defp key_for_result({:ok, :no_changes, _file_path}), do: :no_changes
-  defp key_for_result({:ok, _new_content, _file_path}), do: :override
-  defp key_for_result({:error, _error, _file_path}), do: :errors
-
-  defp override_files(files_to_write) do
-    for {:ok, content, path} <- List.wrap(files_to_write), do: File.write(path, content)
+  defp override_files(new_source_files) do
+    for %SourceFile{path: path} = source_file <- new_source_files,
+        SourceFile.changes?(source_file) do
+      source_file = SourceFile.apply_changeset(source_file)
+      File.write!(path, SourceFile.writtable_contents(source_file))
+    end
   end
 
   defp show_errors(errors) do
-    for {:error, message, path} <- errors do
+    for {:error, reason, path} <- errors do
       IO.puts(path)
-      IO.puts(message)
+      IO.puts(to_string(reason))
     end
   end
 end
