@@ -1,4 +1,4 @@
-defmodule Scapa.VersionStores.TagStoreTest do
+defmodule Scapa.VersionStores.TagsStoreTest do
   use ExUnit.Case, async: true
   doctest Scapa.VersionStores.TagsStore
 

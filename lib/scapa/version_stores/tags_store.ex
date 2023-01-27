@@ -1,4 +1,5 @@
 defmodule Scapa.VersionStores.TagsStore do
+  @moduledoc false
   alias Scapa.FunctionDefinition
 
   defstruct []
