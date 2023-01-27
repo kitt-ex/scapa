@@ -4,6 +4,8 @@ defmodule Scapa.CLI do
   alias Scapa.Config
   alias Scapa.FunctionDefinition
   alias Scapa.SourceFile
+  alias Scapa.VersionsStore
+  alias Scapa.VersionStores.TagsStore
 
   @type change ::
           {SourceFile.operation(), FunctionDefinition.t(), SourceFile.line_number(),
@@ -16,7 +18,8 @@ defmodule Scapa.CLI do
   """
   @doc version: "MzQwMTI5OTU"
   @spec generate_versions(Config.t()) :: {:ok, [SourceFile.t()]} | {:error, [error()]}
-  def generate_versions(%Config{include: files_patterns}) do
+  def generate_versions(%Config{include: files_patterns} = config) do
+    versions_store = version_store_from_config(config)
     source_files = load_source_files(files_patterns)
 
     case Enum.filter(source_files, &(elem(&1, 0) == :error)) do
@@ -24,6 +27,7 @@ defmodule Scapa.CLI do
         {:ok,
          source_files
          |> Enum.map(&elem(&1, 1))
+         |> Enum.map(&inject_function_versions(&1, versions_store))
          |> Enum.map(&SourceFile.generate_doc_version_changes/1)}
 
       errors ->
@@ -36,7 +40,8 @@ defmodule Scapa.CLI do
   """
   @doc version: "MTE5ODExODg"
   @spec check_versions(Config.t()) :: {:ok, [change()]} | {:error, [error()]}
-  def check_versions(%Config{include: files_patterns}) do
+  def check_versions(%Config{include: files_patterns} = config) do
+    versions_store = version_store_from_config(config)
     source_files = load_source_files(files_patterns)
 
     case Enum.filter(source_files, &(elem(&1, 0) == :error)) do
@@ -44,6 +49,7 @@ defmodule Scapa.CLI do
         {:ok,
          source_files
          |> Enum.map(&elem(&1, 1))
+         |> Enum.map(&inject_function_versions(&1, versions_store))
          |> Enum.map(&SourceFile.generate_doc_version_changes/1)
          |> Enum.map(&get_changes_to_make/1)}
 
@@ -63,6 +69,20 @@ defmodule Scapa.CLI do
         {:error, reason} -> {:error, reason, path}
       end
     end)
+  end
+
+  defp version_store_from_config(_config), do: %TagsStore{}
+
+  defp inject_function_versions(
+         %SourceFile{documented_functions: documented_functions} = source_file,
+         store
+       ) do
+    documented_functions =
+      Enum.map(documented_functions, fn function ->
+        %{function | version: VersionsStore.get_version(store, function)}
+      end)
+
+    %{source_file | documented_functions: documented_functions}
   end
 
   defp get_changes_to_make(%SourceFile{changeset: changeset} = source_file) do
