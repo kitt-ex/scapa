@@ -2,16 +2,20 @@ defmodule Scapa.Config do
   @moduledoc false
 
   @type path :: String.t()
+  @type storage :: :tags | :file | {:file, path}
   @type t :: %__MODULE__{
-          include: [path]
+          include: [path],
+          store: storage
         }
 
-  defstruct [:include]
+  defstruct [:include, :store]
 
   @config_path ".scapa.exs"
   @default_config [
-    include: "lib/**/*.ex"
+    include: "lib/**/*.ex",
+    store: :tags
   ]
+  @default_versions_file "priv/doc_versions.exs"
 
   @doc """
   Returns the config for the project if present and fills missing values from the
@@ -25,6 +29,27 @@ defmodule Scapa.Config do
     |> merge_project_config(path)
     |> format_config()
     |> then(&struct!(__MODULE__, &1))
+  end
+
+  @doc """
+  Returns the path where the function versions should be stored or raises
+  and error if the versions should not be stored in any file.
+  """
+  @spec versions_file(Scapa.Config.t()) :: path
+  @doc version: "MTI0OTI2MDEz"
+  def versions_file(%__MODULE__{store: store}) do
+    case store do
+      :file ->
+        @default_versions_file
+
+      {:file, path} ->
+        path
+
+      _ ->
+        raise RuntimeError,
+          message:
+            "trying to get a file in which to store version numbers, but the storage method is #{inspect(store)}"
+    end
   end
 
   defp merge_project_config(config, path) do

@@ -1,3 +1,4 @@
 [
-  include: "all/my/files/*.exs"
+  include: "all/my/files/*.exs",
+  store: :tags
 ]
