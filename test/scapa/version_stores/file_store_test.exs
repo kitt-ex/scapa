@@ -8,8 +8,12 @@ defmodule Scapa.VersionStores.FileStoreTest do
 
   describe "new/1" do
     test "returns a file store with the correct versions from a correct versions file" do
-      assert %FileStore{versions: %{{Module, :my_fun, 3} => "abc"}} =
-               FileStore.new("test/support/version_files/versions.exs")
+      assert %FileStore{
+               versions: %{
+                 {Scapa.ModuleWithDoc, :multiple_arities, 2} => "outdated",
+                 {Scapa.ModuleWithDoc, :public_with_version, 0} => "Mjc5NTIzNTE"
+               }
+             } = FileStore.new("test/support/version_files/versions.exs")
     end
 
     test "returns a file store with no versions from an empty versions file" do

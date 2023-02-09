@@ -1,41 +1,21 @@
 defmodule Scapa.SourceFile do
   @moduledoc false
 
-  defstruct [:path, :contents, :documented_functions, :changeset]
+  defstruct [:path, :contents, :documented_functions]
 
   alias Scapa.FunctionDefinition
   alias Scapa.SourceFile
-  alias Scapa.VersionCalculator
 
   @type t :: %__MODULE__{
           path: path(),
           contents: [content_line()],
-          documented_functions: [FunctionDefinition.t()],
-          changeset: MapSet.t(change())
+          documented_functions: [FunctionDefinition.t()]
         }
 
   @type path :: String.t()
   @type content_line :: String.t()
-  @type change :: {operation(), line_number(), content(), metadata()}
   @type line_number :: non_neg_integer()
-  @type operation :: :insert | :update
   @type content :: String.t()
-  @typep metadata :: Keyword.t()
-
-  @doc """
-  Returns whether or not a source file has changes to be applied.
-
-  ## Examples
-
-      iex> Scapa.SourceFile.changes?(%Scapa.SourceFile{changeset: MapSet.new()})
-      false
-
-      iex> Scapa.SourceFile.changes?(%Scapa.SourceFile{changeset: MapSet.new([{:insert, 2, "something", []}])})
-      true
-  """
-  @spec changes?(SourceFile.t()) :: boolean
-  @doc version: "OTI5NjAzMTY"
-  def changes?(%SourceFile{changeset: changeset}), do: Enum.any?(changeset)
 
   @doc """
   Returns a portion of the contents as a list of strings.
@@ -84,8 +64,7 @@ defmodule Scapa.SourceFile do
        %SourceFile{
          path: file_path,
          contents: String.split(contents, "\n"),
-         documented_functions: documented_functions,
-         changeset: MapSet.new()
+         documented_functions: documented_functions
        }}
     else
       error ->
@@ -94,102 +73,39 @@ defmodule Scapa.SourceFile do
   end
 
   @doc """
-  Generates changes for the functions in the sourfe file so that all versions
-  are present and up to date.
+  Replaces the content on the given line with the new content given.
+
+    ## Examples
+
+    iex> source_file = %Scapa.SourceFile{contents: ["123", "abc", "xyz", "789"]}
+    ...> source_file = Scapa.SourceFile.replace(source_file, 2, "replaced")
+    ...> Scapa.SourceFile.writtable_contents(source_file)
+    "123
+    abc
+    replaced
+    789"
   """
-  @spec generate_doc_version_changes(Scapa.SourceFile.t()) :: SourceFile.t()
-  @doc version: "MzU1Mzg3NzA"
-  def generate_doc_version_changes(
-        %SourceFile{documented_functions: documented_functions} = source_file
-      ) do
-    documented_functions
-    |> Enum.map(&{VersionCalculator.calculate(&1), &1})
-    |> Enum.reduce(source_file, fn
-      {new_version, %FunctionDefinition{version: nil} = function_definition},
-      %SourceFile{changeset: changeset} = source_file ->
-        %{
-          source_file
-          | changeset: MapSet.put(changeset, insert_doc_tag(function_definition, new_version))
-        }
-
-      {new_version, %FunctionDefinition{version: old_version} = function_definition},
-      %SourceFile{changeset: changeset} = source_file
-      when new_version != old_version ->
-        %{
-          source_file
-          | changeset:
-              MapSet.put(changeset, update_doc_tag(function_definition, new_version, source_file))
-        }
-
-      _, source_file ->
-        source_file
-    end)
+  @spec replace(Scapa.SourceFile.t(), integer, String.t()) :: Scapa.SourceFile.t()
+  def replace(%SourceFile{contents: contents} = source_file, line_number, new_content) do
+    %{source_file | contents: List.replace_at(contents, line_number, new_content)}
   end
 
   @doc """
-  Applies the changes in the changeset to the source file, returning a new one
-  with the contents updated. The changes are treated as applied and the changeset is resetted.
+  Inserts the given content on the specified line.
 
-      ## Examples
+    ## Examples
 
-      iex> changeset = MapSet.new([{:insert, 0, "First!", []}, {:update, 0, "456", []}])
-      ...> source_file = %Scapa.SourceFile{contents: ["123", "abc", "xyz", "789"], changeset: changeset}
-      ...> Scapa.SourceFile.apply_changeset(source_file)
-      %Scapa.SourceFile{contents: ["First!", "456", "abc", "xyz", "789"], changeset: MapSet.new()}
+    iex> source_file = %Scapa.SourceFile{contents: ["123", "abc", "xyz", "789"]}
+    ...> source_file = Scapa.SourceFile.insert(source_file, 2, "inserted")
+    ...> Scapa.SourceFile.writtable_contents(source_file)
+    "123
+    abc
+    inserted
+    xyz
+    789"
   """
-  @spec apply_changeset(Scapa.SourceFile.t()) :: Scapa.SourceFile.t()
-  @doc version: "NTkzNTkzMzA"
-  def apply_changeset(%SourceFile{changeset: changeset, contents: contents} = source_file) do
-    updates = Enum.filter(changeset, &(elem(&1, 0) == :update))
-    inserts = Enum.filter(changeset, &(elem(&1, 0) == :insert))
-
-    contents =
-      contents
-      |> apply_updates(updates)
-      |> apply_inserts(inserts)
-
-    %{source_file | contents: contents, changeset: MapSet.new()}
-  end
-
-  defp insert_doc_tag(function_definition, new_version) do
-    doc_tag = quote(do: @doc(version: unquote(new_version)))
-
-    doc_tag_line =
-      String.duplicate(" ", FunctionDefinition.column_number(function_definition) - 1) <>
-        Macro.to_string(doc_tag)
-
-    {:insert, FunctionDefinition.line_number(function_definition) - 1, doc_tag_line,
-     [origin: function_definition]}
-  end
-
-  defp update_doc_tag(
-         %FunctionDefinition{version: old_version} = function_definition,
-         new_version,
-         %SourceFile{
-           contents: contents
-         }
-       ) do
-    doc_tag_line = Enum.find_index(contents, &Regex.match?(~r/"#{old_version}"/, &1))
-    old_doc_tag = Enum.at(contents, doc_tag_line)
-    new_doctag = Regex.replace(~r/"#{old_version}"/, old_doc_tag, ~s{"#{new_version}"})
-
-    {:update, doc_tag_line, new_doctag, [origin: function_definition]}
-  end
-
-  defp apply_updates(contents, updates) do
-    Enum.reduce(updates, contents, fn {:update, line_number, new_content, _meta}, contents ->
-      List.replace_at(contents, line_number, new_content)
-    end)
-  end
-
-  defp apply_inserts(contents, inserts) do
-    inserts
-    |> Enum.sort_by(
-      fn {:insert, line_number, _content, _meta} -> line_number end,
-      :desc
-    )
-    |> Enum.reduce(contents, fn {:insert, line_number, new_content, _meta}, contents ->
-      List.insert_at(contents, line_number, new_content)
-    end)
+  @spec insert(Scapa.SourceFile.t(), integer, String.t()) :: Scapa.SourceFile.t()
+  def insert(%SourceFile{contents: contents} = source_file, line_number, new_content) do
+    %{source_file | contents: List.insert_at(contents, line_number, new_content)}
   end
 end

@@ -11,6 +11,7 @@ defmodule Mix.Tasks.Scapa.Gen.Versions do
 
   alias Scapa.Config
   alias Scapa.SourceFile
+  alias Scapa.SyncService
 
   @doc false
   @impl Mix.Task
@@ -23,12 +24,12 @@ defmodule Mix.Tasks.Scapa.Gen.Versions do
     end
   end
 
-  defp override_files(new_source_files) do
-    for %SourceFile{path: path} = source_file <- new_source_files,
-        SourceFile.changes?(source_file) do
-      source_file = SourceFile.apply_changeset(source_file)
+  defp override_files(changeset) do
+    changeset
+    |> SyncService.apply_changeset()
+    |> Enum.each(fn %SourceFile{path: path} = source_file ->
       File.write!(path, SourceFile.writtable_contents(source_file))
-    end
+    end)
   end
 
   defp show_errors(errors) do

@@ -30,10 +30,13 @@ defmodule Mix.Tasks.Scapa do
   defp show_update({%SourceFile{path: file_path}, []}),
     do: IO.puts(green("File #{file_path} is up to date."))
 
-  defp show_update({%SourceFile{path: file_path}, updates}) do
+  defp show_update({%SourceFile{path: file_path} = source_file, updates}) do
     IO.puts(red("File #{file_path} has a function with a missing or outdated version number."))
 
-    Enum.each(updates, fn {operation, function_definition, line_number, chunk, new_content} ->
+    Enum.each(updates, fn {operation, {_, line_number}, new_content, metadata} ->
+      chunk = SourceFile.get_chunk(source_file, line_number: line_number, lines: 3)
+      function_definition = metadata[:origin]
+
       needed_change =
         if operation == :insert do
           List.insert_at(chunk, 0, bright(new_content))

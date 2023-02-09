@@ -5,40 +5,60 @@ defmodule Scapa.CLITest do
   alias Scapa.Config
   alias Scapa.SourceFile
 
-  @config %Config{include: ["test/support/*.ex"]}
+  @config %Config{include: ["test/support/*.ex"], store: :tags}
 
   describe "generate_versions/1" do
-    test "returns the file location and new source code wih versions" do
+    test "returns the file location and new source code wih versions based on the tags" do
       {:ok, source_files} = CLI.generate_versions(@config)
-      module_with_doc = find_file_source(source_files, "/support/module_with_doc.ex")
+      module_with_doc = find_from_file_source(source_files, "/support/module_with_doc.ex")
 
       module_with_hidden_doc =
-        find_file_source(source_files, "/support/module_with_hidden_doc.ex")
+        find_from_file_source(source_files, "/support/module_with_hidden_doc.ex")
 
       assert [
-               {:insert, 7, "  @doc version: \"NzUzMzUyMjQ\"", _},
-               {:insert, 14, "  @doc version: \"MzA2ODU5NTI\"", _},
-               {:insert, 18, "  @doc version: \"MTE5Mjc1OTkw\"", _},
-               {:insert, 26, "  @doc version: \"MTEwNjA4MzA\"", _},
-               {:insert, 29, "  @doc version: \"NzYxNDM1MDc\"", _},
-               {:insert, 32, "  @doc version: \"NTgwNDA2NzY\"", _},
-               {:insert, 35, "  @doc version: \"NDA5ODYzMDA\"", _},
-               {:insert, 38, "  @doc version: \"ODQ2NTA0MTM\"", _},
-               {:update, 10, "  @doc version: \"Mjc5NTIzNTE\"", _}
-             ] = Enum.to_list(module_with_doc.changeset)
+               {:insert, {%SourceFile{}, 7}, "  @doc version: \"NzUzMzUyMjQ\"", _},
+               {:insert, {%SourceFile{}, 14}, "  @doc version: \"MzA2ODU5NTI\"", _},
+               {:insert, {%SourceFile{}, 18}, "  @doc version: \"MTE5Mjc1OTkw\"", _},
+               {:insert, {%SourceFile{}, 26}, "  @doc version: \"MTEwNjA4MzA\"", _},
+               {:insert, {%SourceFile{}, 29}, "  @doc version: \"NzYxNDM1MDc\"", _},
+               {:insert, {%SourceFile{}, 32}, "  @doc version: \"NTgwNDA2NzY\"", _},
+               {:insert, {%SourceFile{}, 35}, "  @doc version: \"NDA5ODYzMDA\"", _},
+               {:insert, {%SourceFile{}, 38}, "  @doc version: \"ODQ2NTA0MTM\"", _},
+               {:update, {%SourceFile{}, 10}, "  @doc version: \"Mjc5NTIzNTE\"", _}
+             ] = module_with_doc
 
       assert [
-               {:insert, 4, "  @doc version: \"Njc0NzQyOTY\"", _}
-             ] = Enum.to_list(module_with_hidden_doc.changeset)
+               {:insert, {%SourceFile{}, 4}, "  @doc version: \"Njc0NzQyOTY\"", _}
+             ] = module_with_hidden_doc
+    end
+
+    @tag :skip
+    test "returns the file location and new source code wih versions based on the versions file" do
+      {:ok, source_files} =
+        CLI.generate_versions(%{
+          @config
+          | store: {:file, "test/support/version_files/versions.exs"}
+        })
+
+      changeset = find_from_file_source(source_files, "/support/module_with_doc.ex")
+
+      assert [
+               {:insert, {%SourceFile{}, 7}, "{Scapa.ModuleWithDoc, 1} => \"NzUzMzUyMjQ\"", _},
+               {:insert, {%SourceFile{}, 14}, "{Scapa.ModuleWithDoc, 2} => \"MzA2ODU5NTI\"", _},
+               {:insert, {%SourceFile{}, 18}, "{Scapa.ModuleWithDoc, 3} => \"MTE5Mjc1OTkw\"", _},
+               {:insert, {%SourceFile{}, 26}, "{Scapa.ModuleWithDoc, 4} => \"MTEwNjA4MzA\"", _},
+               {:insert, {%SourceFile{}, 29}, "{Scapa.ModuleWithDoc, 5} => \"NzYxNDM1MDc\"", _},
+               {:insert, {%SourceFile{}, 32}, "{Scapa.ModuleWithDoc, 6} => \"NTgwNDA2NzY\"", _},
+               {:insert, {%SourceFile{}, 35}, "{Scapa.ModuleWithDoc, 7} => \"NDA5ODYzMDA\"", _},
+               {:insert, {%SourceFile{}, 38}, "{Scapa.ModuleWithDoc, 8} => \"ODQ2NTA0MTM\"", _},
+               {:update, {%SourceFile{}, 10}, "{Scapa.ModuleWithDoc, 9} => \"Mjc5NTIzNTE\"", _}
+             ] = Enum.to_list(changeset)
     end
 
     test "returns an empty list if there's no changes to be saved" do
       {:ok, source_files} = CLI.generate_versions(@config)
 
-      %SourceFile{changeset: changeset} =
-        find_file_source(source_files, "/support/module_with_typedoc.ex")
-
-      assert [] = Enum.to_list(changeset)
+      assert [] = find_from_file_source(source_files, "/support/module_with_typedoc.ex")
     end
   end
 
@@ -48,17 +68,16 @@ defmodule Scapa.CLITest do
 
       {_source_file, changes} = find_file_source(results, "/support/module_with_hidden_doc.ex")
 
-      [{:insert, change_origin_function, change_line, current_content, new_content}] = changes
+      [{:insert, location, new_content, metadata}] = changes
 
       assert %Scapa.FunctionDefinition{
                position: {5, 3},
                signature: {Scapa.ModuleWithHiddenDoc, :public_with_doc, 0, "public_with_doc()"},
                version: nil
-             } = change_origin_function
+             } = metadata[:origin]
 
-      assert 4 = change_line
+      assert {%SourceFile{}, 4} = location
 
-      assert ["  def public_with_doc, do: nil", "end", ""] = current_content
       assert ~s(  @doc version: "Njc0NzQyOTY") = new_content
     end
 
@@ -67,19 +86,15 @@ defmodule Scapa.CLITest do
 
       {_source_file, changes} = find_file_source(results, "/support/module_with_doc.ex")
 
-      {:update, change_origin_function, change_line, current_content, new_content} =
-        Enum.find(changes, &(elem(&1, 0) == :update))
+      {:update, location, new_content, metadata} = Enum.find(changes, &(elem(&1, 0) == :update))
 
       assert %Scapa.FunctionDefinition{
                position: {12, 3},
                signature: {Scapa.ModuleWithDoc, :public_with_version, 0, "public_with_version()"},
                version: "abc"
-             } = change_origin_function
+             } = metadata[:origin]
 
-      assert 10 = change_line
-
-      assert [~s(  @doc version: "abc"), "  def public_with_version, do: private_fun()", ""] =
-               current_content
+      assert {%SourceFile{}, 10} = location
 
       assert ~s(  @doc version: "Mjc5NTIzNTE") = new_content
     end
@@ -96,5 +111,14 @@ defmodule Scapa.CLITest do
       %SourceFile{path: path} -> String.ends_with?(path, file_name)
       {%SourceFile{path: path}, _updates} -> String.ends_with?(path, file_name)
     end)
+  end
+
+  defp find_from_file_source(results, file_name) do
+    Enum.filter(results, fn result ->
+      {%SourceFile{path: path}, _line_number} = elem(result, 1)
+
+      String.ends_with?(path, file_name)
+    end)
+    |> Enum.sort()
   end
 end
