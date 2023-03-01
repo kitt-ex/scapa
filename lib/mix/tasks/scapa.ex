@@ -33,8 +33,19 @@ defmodule Mix.Tasks.Scapa do
   defp show_update({%SourceFile{path: file_path} = source_file, updates}) do
     IO.puts(red("File #{file_path} has a function with a missing or outdated version number."))
 
-    Enum.each(updates, fn {operation, {_, line_number}, new_content, metadata} ->
-      chunk = SourceFile.get_chunk(source_file, line_number: line_number, lines: 3)
+    Enum.each(updates, fn {operation, location, new_content, metadata} ->
+      line_number = if is_tuple(location), do: elem(location, 1)
+      new_content = if is_bitstring(new_content) do
+        new_content
+      else
+        {key, value} = new_content
+        "#{inspect(key)} => #{inspect(value)},"
+      end
+      chunk = if line_number do
+          SourceFile.get_chunk(source_file, line_number: line_number, lines: 3)
+        else
+          []
+      end
       function_definition = metadata[:origin]
 
       needed_change =

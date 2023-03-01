@@ -4,16 +4,18 @@ defmodule Scapa.CLITest do
   alias Scapa.CLI
   alias Scapa.Config
   alias Scapa.SourceFile
+  alias Scapa.SyncBackends.TagsSync
+  alias Scapa.SyncBackends.VersionsFileSync
 
   @config %Config{include: ["test/support/*.ex"], store: :tags}
 
   describe "generate_versions/1" do
     test "returns the file location and new source code wih versions based on the tags" do
       {:ok, source_files} = CLI.generate_versions(@config)
-      module_with_doc = find_from_file_source(source_files, "/support/module_with_doc.ex")
+      module_with_doc = changes_from_file_source(source_files, "/support/module_with_doc.ex")
 
       module_with_hidden_doc =
-        find_from_file_source(source_files, "/support/module_with_hidden_doc.ex")
+        changes_from_file_source(source_files, "/support/module_with_hidden_doc.ex")
 
       assert [
                {:insert, {%SourceFile{}, 7}, "  @doc version: \"NzUzMzUyMjQ\"", _},
@@ -32,7 +34,6 @@ defmodule Scapa.CLITest do
              ] = module_with_hidden_doc
     end
 
-    @tag :skip
     test "returns the file location and new source code wih versions based on the versions file" do
       {:ok, source_files} =
         CLI.generate_versions(%{
@@ -40,25 +41,44 @@ defmodule Scapa.CLITest do
           | store: {:file, "test/support/version_files/versions.exs"}
         })
 
-      changeset = find_from_file_source(source_files, "/support/module_with_doc.ex")
+      %VersionsFileSync{changeset: changeset} = source_files
 
       assert [
-               {:insert, {%SourceFile{}, 7}, "{Scapa.ModuleWithDoc, 1} => \"NzUzMzUyMjQ\"", _},
-               {:insert, {%SourceFile{}, 14}, "{Scapa.ModuleWithDoc, 2} => \"MzA2ODU5NTI\"", _},
-               {:insert, {%SourceFile{}, 18}, "{Scapa.ModuleWithDoc, 3} => \"MTE5Mjc1OTkw\"", _},
-               {:insert, {%SourceFile{}, 26}, "{Scapa.ModuleWithDoc, 4} => \"MTEwNjA4MzA\"", _},
-               {:insert, {%SourceFile{}, 29}, "{Scapa.ModuleWithDoc, 5} => \"NzYxNDM1MDc\"", _},
-               {:insert, {%SourceFile{}, 32}, "{Scapa.ModuleWithDoc, 6} => \"NTgwNDA2NzY\"", _},
-               {:insert, {%SourceFile{}, 35}, "{Scapa.ModuleWithDoc, 7} => \"NDA5ODYzMDA\"", _},
-               {:insert, {%SourceFile{}, 38}, "{Scapa.ModuleWithDoc, 8} => \"ODQ2NTA0MTM\"", _},
-               {:update, {%SourceFile{}, 10}, "{Scapa.ModuleWithDoc, 9} => \"Mjc5NTIzNTE\"", _}
+               {:insert, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithDoc, :multiple_arities, 1}, "MTEwNjA4MzA"}, _},
+               {:update, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithDoc, :multiple_arities, 2}, "NzYxNDM1MDc"}, _},
+               {
+                 :insert,
+                 "test/support/version_files/versions.exs",
+                 {{Scapa.ModuleWithDoc, :multiple_arities_documented, 2}, "NzcwNTE3MDE"},
+                 _
+               },
+               {:insert, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithDoc, :multiple_def, 1}, "MzA2ODU5NTI"}, _},
+               {
+                 :insert,
+                 "test/support/version_files/versions.exs",
+                 {{Scapa.ModuleWithDoc, :multiple_def_with_default, 1}, "MTE5Mjc1OTkw"},
+                 _
+               },
+               {:insert, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithDoc, :public_with_doc, 0}, "NzUzMzUyMjQ"}, _},
+               {:insert, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithDoc, :public_with_guard, 1}, "NTgwNDA2NzY"}, _},
+               {:insert, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithDoc, :__using__, 1}, "ODQ2NTA0MTM"}, _},
+               {:insert, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithDoc, :macro, 3}, "NDA5ODYzMDA"}, _},
+               {:insert, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithHiddenDoc, :public_with_doc, 0}, "Njc0NzQyOTY"}, _}
              ] = Enum.to_list(changeset)
     end
 
     test "returns an empty list if there's no changes to be saved" do
       {:ok, source_files} = CLI.generate_versions(@config)
 
-      assert [] = find_from_file_source(source_files, "/support/module_with_typedoc.ex")
+      assert [] = changes_from_file_source(source_files, "/support/module_with_typedoc.ex")
     end
   end
 
@@ -113,8 +133,8 @@ defmodule Scapa.CLITest do
     end)
   end
 
-  defp find_from_file_source(results, file_name) do
-    Enum.filter(results, fn result ->
+  defp changes_from_file_source(%TagsSync{changeset: changeset}, file_name) do
+    Enum.filter(changeset, fn result ->
       {%SourceFile{path: path}, _line_number} = elem(result, 1)
 
       String.ends_with?(path, file_name)

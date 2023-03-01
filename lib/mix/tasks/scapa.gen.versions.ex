@@ -19,13 +19,13 @@ defmodule Mix.Tasks.Scapa.Gen.Versions do
     config = Config.fetch_config()
 
     case Scapa.CLI.generate_versions(config) do
-      {:ok, source_files} -> override_files(source_files)
+      {:ok, sync} -> override_files(sync)
       {:error, errors} -> show_errors(errors)
     end
   end
 
-  defp override_files(changeset) do
-    changeset
+  defp override_files(sync) do
+    sync
     |> SyncService.apply_changeset()
     |> Enum.each(fn %SourceFile{path: path} = source_file ->
       File.write!(path, SourceFile.writtable_contents(source_file))
