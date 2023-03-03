@@ -35,38 +35,6 @@ defmodule Mix.Tasks.Scapa do
 
     Enum.each(updates, fn update ->
       IO.puts(update_text(source_file, update))
-
-      # line_number = if is_tuple(location), do: elem(location, 1)
-
-      # new_content =
-      #   if is_bitstring(new_content) do
-      #     new_content
-      #   else
-      #     {key, value} = new_content
-      #     "#{inspect(key)} => #{inspect(value)},"
-      #   end
-
-      # chunk =
-      #   if line_number do
-      #     SourceFile.get_chunk(source_file, line_number: line_number, lines: 3)
-      #   else
-      #     []
-      #   end
-
-      # function_definition = metadata[:origin]
-
-      # needed_change =
-      #   if operation == :insert do
-      #     List.insert_at(chunk, 0, bright(new_content))
-      #   else
-      #     List.replace_at(chunk, 0, bright(new_content))
-      #   end
-
-      # IO.puts(
-      #   "#{show_file_line(file_path, line_number)} #{show_function(function_definition)} #{if operation == :insert, do: "missing version", else: "outdated version"}"
-      # )
-
-      # IO.puts(Enum.join(needed_change, "\n"))
     end)
   end
 

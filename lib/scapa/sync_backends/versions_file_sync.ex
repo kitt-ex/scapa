@@ -9,11 +9,13 @@ defmodule Scapa.SyncBackends.VersionsFileSync do
 
   defstruct [:versions, :file_path, changeset: []]
 
+  @type t :: %__MODULE__{}
+
   @doc """
   Reads the versions file from the config and returns a VersionsFileSync struct
   with that data.
   """
-  @spec new(Config.t()) :: %VersionsFileSync{}
+  @spec new(Config.t()) :: t()
   @doc version: "Mjc3MTI5ODI"
   def new(config) do
     file_path = Config.versions_file(config)
@@ -34,11 +36,13 @@ defmodule Scapa.SyncBackends.VersionsFileSync do
   end
 
   defimpl SyncService do
+    @type t :: %VersionsFileSync{}
+
     @doc """
     Adds a list of changes to the changeset to follow to get the versions saved in sync with the
     versions calculated out of the source code.
     """
-    @spec sync_steps(%VersionsFileSync{}, SourceFile.t()) :: %VersionsFileSync{}
+    @spec sync_steps(t(), SourceFile.t()) :: t()
     def sync_steps(
           %VersionsFileSync{
             versions: function_versions,
@@ -74,7 +78,7 @@ defmodule Scapa.SyncBackends.VersionsFileSync do
     Applies the changes in the changeset returning a new versions SourceFile with
     the updated data.
     """
-    @spec apply_changeset(%VersionsFileSync{}) :: [SourceFile.t()]
+    @spec apply_changeset(t()) :: [SourceFile.t()]
     def apply_changeset(%VersionsFileSync{
           versions: function_versions,
           changeset: changeset,

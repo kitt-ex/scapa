@@ -8,11 +8,13 @@ defmodule Scapa.SyncBackends.TagsSync do
 
   defstruct [:versions, changeset: []]
 
+  @type t :: %__MODULE__{}
+
   @doc """
   Calculates the versions from the given Source Files and returns
   a TagSync struct.
   """
-  @spec new([SourceFile.t()]) :: %TagsSync{}
+  @spec new([SourceFile.t()]) :: t()
   @doc version: "Mjg3Nzk3MDY"
   def new(source_files) do
     versions =
@@ -24,11 +26,13 @@ defmodule Scapa.SyncBackends.TagsSync do
   end
 
   defimpl SyncService do
+    @type t :: %TagsSync{}
+
     @doc """
     Adds a list of changes to the changeset to follow to get the versions saved in sync with the
     versions calculated out of the source code.
     """
-    @spec sync_steps(%TagsSync{}, SourceFile.t()) :: %TagsSync{}
+    @spec sync_steps(t(), SourceFile.t()) :: t()
     def sync_steps(
           %TagsSync{versions: function_versions, changeset: changeset} = sync,
           %SourceFile{documented_functions: documented_functions} = source_file
@@ -57,7 +61,7 @@ defmodule Scapa.SyncBackends.TagsSync do
     Applies the changes in the changeset to the listed source files, returning new ones
     with their contents updated.
     """
-    @spec apply_changeset(%TagsSync{}) :: [SourceFile.t()]
+    @spec apply_changeset(t()) :: [SourceFile.t()]
     def apply_changeset(%TagsSync{changeset: changeset}) do
       operation_order = %{insert: 0, update: 1}
 
