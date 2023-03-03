@@ -70,7 +70,10 @@ defmodule Mix.Tasks.Scapa do
     end)
   end
 
-  defp update_text(%SourceFile{path: file_path} = source_file, {operation, {_, line_number}, new_content, metadata}) do
+  defp update_text(
+         %SourceFile{path: file_path} = source_file,
+         {operation, {_, line_number}, new_content, metadata}
+       ) do
     chunk = SourceFile.get_chunk(source_file, line_number: line_number, lines: 3)
 
     function_definition = metadata[:origin]
@@ -82,7 +85,8 @@ defmodule Mix.Tasks.Scapa do
         List.replace_at(chunk, 0, bright(new_content))
       end
 
-      "#{show_file_line(file_path, line_number)} #{show_function(function_definition)} #{if operation == :insert, do: "missing version", else: "outdated version"}\n" <> Enum.join(needed_change, "\n")
+    "#{show_file_line(file_path, line_number)} #{show_function(function_definition)} #{if operation == :insert, do: "missing version", else: "outdated version"}\n" <>
+      Enum.join(needed_change, "\n")
   end
 
   defp update_text(%SourceFile{path: file_path}, {operation, _location, {key, value}, metadata}) do
@@ -90,7 +94,8 @@ defmodule Mix.Tasks.Scapa do
 
     function_definition = metadata[:origin]
 
-    "#{show_file_line(file_path, nil)} #{show_function(function_definition)} #{if operation == :insert, do: "missing version", else: "outdated version"}\n" <> bright(new_content)
+    "#{show_file_line(file_path, nil)} #{show_function(function_definition)} #{if operation == :insert, do: "missing version", else: "outdated version"}\n" <>
+      bright(new_content)
   end
 
   defp show_errors(errors) do

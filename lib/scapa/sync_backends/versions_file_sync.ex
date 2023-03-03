@@ -118,7 +118,7 @@ defmodule Scapa.SyncBackends.VersionsFileSync do
       versions
       |> inspect(pretty: true)
       |> String.split("\n")
-      |> then(& &1 ++ ["\n"])
+      |> then(&(&1 ++ ["\n"]))
     end
   end
 end
