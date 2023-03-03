@@ -9,6 +9,12 @@ defmodule Scapa.SyncBackends.VersionsFileSync do
 
   defstruct [:versions, :file_path, changeset: []]
 
+  @doc """
+  Reads the versions file from the config and returns a VersionsFileSync struct
+  with that data.
+  """
+  @spec new(Config.t()) :: %VersionsFileSync{}
+  @doc version: "Mjc3MTI5ODI"
   def new(config) do
     file_path = Config.versions_file(config)
 
@@ -28,6 +34,11 @@ defmodule Scapa.SyncBackends.VersionsFileSync do
   end
 
   defimpl SyncService do
+    @doc """
+    Adds a list of changes to the changeset to follow to get the versions saved in sync with the
+    versions calculated out of the source code.
+    """
+    @spec sync_steps(%VersionsFileSync{}, SourceFile.t()) :: %VersionsFileSync{}
     def sync_steps(
           %VersionsFileSync{
             versions: function_versions,
@@ -59,20 +70,20 @@ defmodule Scapa.SyncBackends.VersionsFileSync do
       |> then(&%{sync | changeset: changeset ++ &1})
     end
 
+    @doc """
+    Applies the changes in the changeset returning a new versions SourceFile with
+    the updated data.
+    """
+    @spec apply_changeset(%VersionsFileSync{}) :: [SourceFile.t()]
     def apply_changeset(%VersionsFileSync{
           versions: function_versions,
           changeset: changeset,
           file_path: file_path
         }) do
       changeset
-      |> Enum.map(&elem(&1, 2))
-      |> Enum.sort()
-      |> Enum.reduce(function_versions, fn {key, value}, versions ->
-        Map.put(versions, key, value)
-      end)
-      |> inspect(pretty: true)
-      |> String.split("\n")
-      |> then(&[%SourceFile{contents: &1 ++ ["\n"], path: file_path, documented_functions: []}])
+      |> merge_changeset(function_versions)
+      |> stringify_versions()
+      |> then(&[%SourceFile{contents: &1, path: file_path, documented_functions: []}])
     end
 
     defp insert_new_entry(
@@ -92,6 +103,22 @@ defmodule Scapa.SyncBackends.VersionsFileSync do
       entry = {{m, f, a}, new_version}
 
       {:update, file_path, entry, [origin: function_definition]}
+    end
+
+    defp merge_changeset(changeset, function_versions) do
+      changeset
+      |> Enum.map(&elem(&1, 2))
+      |> Enum.sort()
+      |> Enum.reduce(function_versions, fn {key, value}, versions ->
+        Map.put(versions, key, value)
+      end)
+    end
+
+    defp stringify_versions(versions) do
+      versions
+      |> inspect(pretty: true)
+      |> String.split("\n")
+      |> then(& &1 ++ ["\n"])
     end
   end
 end

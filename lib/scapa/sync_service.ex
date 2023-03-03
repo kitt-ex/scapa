@@ -4,8 +4,9 @@ defprotocol Scapa.SyncService do
 
   @type function_versions :: %{Scapa.FunctionDefinition.t() => Scapa.FunctionDefinition.version()}
   @type change ::
-          {operation(), {SourceFile.t(), SourceFile.line_number()}, SourceFile.content(),
+          {operation(), location(), SourceFile.content(),
            metadata()}
+  @type location :: {SourceFile.t(), SourceFile.line_number()} | String.t()
   @type operation :: :insert | :update
   @typep metadata :: Keyword.t()
 
