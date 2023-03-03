@@ -13,6 +13,8 @@
   {Scapa.SourceFile, :load_from_path, 1} => "ODI4NzI1ODQ",
   {Scapa.SourceFile, :replace, 3} => "NDgyMDM4NDM",
   {Scapa.SourceFile, :writtable_contents, 1} => "OTYxNDg1Mzk",
+  {Scapa.SyncBackends.TagsSync, :new, 1} => "Mjg3Nzk3MDY",
+  {Scapa.SyncBackends.VersionsFileSync, :new, 1} => "Mjc3MTI5ODI",
   {Scapa.VersionCalculator, :calculate, 1} => "ODgwNzQxMg",
   {Scapa.VersionStores.FileStore, :new, 1} => "NDA5NzIyODM"
 }
