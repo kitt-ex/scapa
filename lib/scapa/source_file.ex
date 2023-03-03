@@ -73,6 +73,22 @@ defmodule Scapa.SourceFile do
   end
 
   @doc """
+  Returns the index and the content of the first line that matches the given pattern.
+
+    ## Examples
+
+    iex> source_file = %Scapa.SourceFile{contents: ["123", "abc", "xyz", "xxx"]}
+    ...> Scapa.SourceFile.find_line(source_file, ~r{^x})
+    {2, "xyz"}
+  """
+  @spec find_line(Scapa.SourceFile.t(), Regex.t()) :: {non_neg_integer, String.t()}
+  def find_line(%SourceFile{contents: contents}, pattern) do
+    line_number = Enum.find_index(contents, &Regex.match?(pattern, &1))
+
+    {line_number, Enum.at(contents, line_number)}
+  end
+
+  @doc """
   Replaces the content on the given line with the new content given.
 
     ## Examples

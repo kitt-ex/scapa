@@ -86,13 +86,9 @@ defmodule Scapa.SyncBackends.TagsSync do
            source_file,
            %FunctionDefinition{version: old_version} = function_definition,
            new_version,
-           %SourceFile{
-             contents: contents
-           }
+           source_file
          ) do
-      # TODO: update, should belong to SourceFile
-      doc_tag_line = Enum.find_index(contents, &Regex.match?(~r/"#{old_version}"/, &1))
-      old_doc_tag = Enum.at(contents, doc_tag_line)
+      {doc_tag_line, old_doc_tag} = SourceFile.find_line(source_file, ~r/"#{old_version}"/)
       new_doctag = Regex.replace(~r/"#{old_version}"/, old_doc_tag, ~s{"#{new_version}"})
 
       {:update, {source_file, doc_tag_line}, new_doctag, [origin: function_definition]}
