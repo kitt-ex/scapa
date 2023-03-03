@@ -77,11 +77,11 @@ defmodule Mix.Tasks.Scapa do
     Exception.format_mfa(module, name, arity)
   end
 
-  def make_path_relative({%SourceFile{path: file_path} = source_file, changes}) do
+  defp make_path_relative({%SourceFile{path: file_path} = source_file, changes}) do
     {%{source_file | path: Path.relative_to_cwd(file_path)}, changes}
   end
 
-  def show_file_line(path, line), do: Exception.format_file_line(path, line)
+  defp show_file_line(path, line), do: Exception.format_file_line(path, line)
 
   defp red(str), do: IO.ANSI.red() <> str <> reset()
   defp green(str), do: IO.ANSI.green() <> str <> reset()
