@@ -8,6 +8,53 @@ defmodule Scapa.VersionsFileSyncTest do
 
   @file_path "versions.exs"
 
+  describe "new/1" do
+    test "returns the contents of the versions file as a map" do
+      assert %VersionsFileSync{
+               changeset: [],
+               file_path: "test/support/version_files/versions.exs",
+               versions: %{
+                 {Scapa.ModuleWithDoc, :multiple_arities, 2} => "outdated",
+                 {Scapa.ModuleWithDoc, :public_with_version, 0} => "Mjc5NTIzNTE"
+               }
+             } =
+               VersionsFileSync.new(%Scapa.Config{
+                 store: {:file, "test/support/version_files/versions.exs"}
+               })
+    end
+
+    test "returns an empty map when the file is empty" do
+      assert %Scapa.SyncBackends.VersionsFileSync{
+               changeset: [],
+               file_path: "test/support/version_files/versions_empty.exs",
+               versions: %{}
+             } =
+               VersionsFileSync.new(%Scapa.Config{
+                 store: {:file, "test/support/version_files/versions_empty.exs"}
+               })
+    end
+
+    test "raises an error when the content is not a map" do
+      assert_raise ArgumentError,
+                   ~s(Expected "test/support/version_files/not_a_map.exs" to return a map, got: [%{}]),
+                   fn ->
+                     VersionsFileSync.new(%Scapa.Config{
+                       store: {:file, "test/support/version_files/not_a_map.exs"}
+                     })
+                   end
+    end
+
+    test "raises an error when the file does not exist" do
+      assert_raise RuntimeError,
+                   "trying to read versions file but test/support/version_files/not_there.exs does not exist",
+                   fn ->
+                     VersionsFileSync.new(%Scapa.Config{
+                       store: {:file, "test/support/version_files/not_there.exs"}
+                     })
+                   end
+    end
+  end
+
   describe "sync_steps/2" do
     test "returns the needed inserts for missing versions" do
       source_file = %SourceFile{
@@ -18,7 +65,8 @@ defmodule Scapa.VersionsFileSyncTest do
       }
 
       sync = %VersionsFileSync{
-        versions: %{}, # simulates versions file empty
+        # simulates versions file empty
+        versions: %{},
         file_path: @file_path
       }
 

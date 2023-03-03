@@ -83,7 +83,7 @@ defmodule Scapa.CLITest do
   end
 
   describe "check_versions/1" do
-    test "returns changes for missing versions" do
+    test "returns changes for missing versions based on the version tags" do
       {:ok, results} = CLI.check_versions(@config)
 
       {_source_file, changes} = find_file_source(results, "/support/module_with_hidden_doc.ex")
@@ -101,7 +101,7 @@ defmodule Scapa.CLITest do
       assert ~s(  @doc version: "Njc0NzQyOTY") = new_content
     end
 
-    test "returns changes for missing functions" do
+    test "returns changes for missing functions based on the version tags" do
       {:ok, results} = CLI.check_versions(@config)
 
       {_source_file, changes} = find_file_source(results, "/support/module_with_doc.ex")
@@ -117,6 +117,36 @@ defmodule Scapa.CLITest do
       assert {%SourceFile{}, 10} = location
 
       assert ~s(  @doc version: "Mjc5NTIzNTE") = new_content
+    end
+
+    test "returns changes for functions based on the versions file" do
+      {:ok, results} =
+        CLI.check_versions(%{@config | store: {:file, "test/support/version_files/versions.exs"}})
+
+      [{_source_file, changes}] = results
+
+      assert [
+               {:insert, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithDoc, :multiple_arities, 1}, "MTEwNjA4MzA"}, _},
+               {:update, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithDoc, :multiple_arities, 2}, "NzYxNDM1MDc"}, _},
+               {:insert, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithDoc, :multiple_arities_documented, 2}, "NzcwNTE3MDE"}, _},
+               {:insert, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithDoc, :multiple_def, 1}, "MzA2ODU5NTI"}, _},
+               {:insert, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithDoc, :multiple_def_with_default, 1}, "MTE5Mjc1OTkw"}, _},
+               {:insert, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithDoc, :public_with_doc, 0}, "NzUzMzUyMjQ"}, _},
+               {:insert, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithDoc, :public_with_guard, 1}, "NTgwNDA2NzY"}, _},
+               {:insert, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithDoc, :__using__, 1}, "ODQ2NTA0MTM"}, _},
+               {:insert, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithDoc, :macro, 3}, "NDA5ODYzMDA"}, _},
+               {:insert, "test/support/version_files/versions.exs",
+                {{Scapa.ModuleWithHiddenDoc, :public_with_doc, 0}, "Njc0NzQyOTY"}, _}
+             ] = changes
     end
 
     test "returns an empty list when there are no changes" do

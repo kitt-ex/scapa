@@ -6,6 +6,25 @@ defmodule Scapa.TagsSyncTest do
   alias Scapa.SyncService
   alias Scapa.SyncBackends.TagsSync
 
+  describe "new/1" do
+    test "returns the calculated versions for the source files" do
+      source_file = %SourceFile{
+        documented_functions: [
+          %FunctionDefinition{
+            version: "old_abcd",
+            signature: {Module, :a, 1, "a(b)"}
+          },
+          %FunctionDefinition{
+            version: "old_efgh",
+            signature: {Module, :b, 2, "a(c, d)"}
+          }
+        ],
+      }
+
+      assert %TagsSync{changeset: [], versions: %{{Module, :a, 1, "a(b)"} => "NjEyMDM5NTc", {Module, :b, 2, "a(c, d)"} => "NzQ1OTc1NDQ"}} = TagsSync.new([source_file])
+    end
+  end
+
   describe "sync_steps/2" do
     test "returns the needed inserts for missing versions" do
       source_file = %SourceFile{

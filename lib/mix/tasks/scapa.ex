@@ -35,17 +35,22 @@ defmodule Mix.Tasks.Scapa do
 
     Enum.each(updates, fn {operation, location, new_content, metadata} ->
       line_number = if is_tuple(location), do: elem(location, 1)
-      new_content = if is_bitstring(new_content) do
-        new_content
-      else
-        {key, value} = new_content
-        "#{inspect(key)} => #{inspect(value)},"
-      end
-      chunk = if line_number do
+
+      new_content =
+        if is_bitstring(new_content) do
+          new_content
+        else
+          {key, value} = new_content
+          "#{inspect(key)} => #{inspect(value)},"
+        end
+
+      chunk =
+        if line_number do
           SourceFile.get_chunk(source_file, line_number: line_number, lines: 3)
         else
           []
-      end
+        end
+
       function_definition = metadata[:origin]
 
       needed_change =
