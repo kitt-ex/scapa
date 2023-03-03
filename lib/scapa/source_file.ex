@@ -82,6 +82,7 @@ defmodule Scapa.SourceFile do
     {2, "xyz"}
   """
   @spec find_line(Scapa.SourceFile.t(), Regex.t()) :: {non_neg_integer, String.t()}
+  @doc version: "OTI2MzUyNTM"
   def find_line(%SourceFile{contents: contents}, pattern) do
     line_number = Enum.find_index(contents, &Regex.match?(pattern, &1))
 
@@ -102,6 +103,7 @@ defmodule Scapa.SourceFile do
     789"
   """
   @spec replace(Scapa.SourceFile.t(), integer, String.t()) :: Scapa.SourceFile.t()
+  @doc version: "NDgyMDM4NDM"
   def replace(%SourceFile{contents: contents} = source_file, line_number, new_content) do
     %{source_file | contents: List.replace_at(contents, line_number, new_content)}
   end
@@ -121,6 +123,7 @@ defmodule Scapa.SourceFile do
     789"
   """
   @spec insert(Scapa.SourceFile.t(), integer, String.t()) :: Scapa.SourceFile.t()
+  @doc version: "MzgwMjc2NTU"
   def insert(%SourceFile{contents: contents} = source_file, line_number, new_content) do
     %{source_file | contents: List.insert_at(contents, line_number, new_content)}
   end

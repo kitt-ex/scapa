@@ -7,6 +7,7 @@
   {Scapa.Config, :versions_file, 1} => "MTI0OTI2MDEz",
   {Scapa.FunctionDefinition, :column_number, 1} => "NDg0NjQzNTY",
   {Scapa.FunctionDefinition, :line_number, 1} => "NjM2NTY5NTA",
+  {Scapa.SourceFile, :find_line, 2} => "OTI2MzUyNTM",
   {Scapa.SourceFile, :get_chunk, 2} => "MzA2Njk2Nzk",
   {Scapa.SourceFile, :insert, 3} => "MzgwMjc2NTU",
   {Scapa.SourceFile, :load_from_path, 1} => "ODI4NzI1ODQ",

@@ -14,6 +14,7 @@ defmodule Scapa.VersionCalculator do
     %{{Scapa.VersionCalculator, :hello, 1, "hello(arg1)"} => "NDc2NzQ4MjM"}
   """
   @spec calculate(SourceFile.t()) :: %{FunctionDefinition.signature() => version()}
+  @doc version: "ODgwNzQxMg"
   def calculate(%SourceFile{documented_functions: functions}) do
     functions
     |> Enum.reduce(%{}, fn %FunctionDefinition{signature: signature} = function_definition,

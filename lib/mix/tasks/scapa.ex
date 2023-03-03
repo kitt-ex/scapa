@@ -20,52 +20,77 @@ defmodule Mix.Tasks.Scapa do
       {:ok, updates} ->
         updates
         |> Enum.map(&make_path_relative/1)
-        |> Enum.each(&show_update/1)
+        |> Enum.each(&show_updates/1)
 
       {:error, errors} ->
         show_errors(errors)
     end
   end
 
-  defp show_update({%SourceFile{path: file_path}, []}),
+  defp show_updates({%SourceFile{path: file_path}, []}),
     do: IO.puts(green("File #{file_path} is up to date."))
 
-  defp show_update({%SourceFile{path: file_path} = source_file, updates}) do
+  defp show_updates({%SourceFile{path: file_path} = source_file, updates}) do
     IO.puts(red("File #{file_path} has a function with a missing or outdated version number."))
 
-    Enum.each(updates, fn {operation, location, new_content, metadata} ->
-      line_number = if is_tuple(location), do: elem(location, 1)
+    Enum.each(updates, fn update ->
+      IO.puts(update_text(source_file, update))
 
-      new_content =
-        if is_bitstring(new_content) do
-          new_content
-        else
-          {key, value} = new_content
-          "#{inspect(key)} => #{inspect(value)},"
-        end
+      # line_number = if is_tuple(location), do: elem(location, 1)
 
-      chunk =
-        if line_number do
-          SourceFile.get_chunk(source_file, line_number: line_number, lines: 3)
-        else
-          []
-        end
+      # new_content =
+      #   if is_bitstring(new_content) do
+      #     new_content
+      #   else
+      #     {key, value} = new_content
+      #     "#{inspect(key)} => #{inspect(value)},"
+      #   end
 
-      function_definition = metadata[:origin]
+      # chunk =
+      #   if line_number do
+      #     SourceFile.get_chunk(source_file, line_number: line_number, lines: 3)
+      #   else
+      #     []
+      #   end
 
-      needed_change =
-        if operation == :insert do
-          List.insert_at(chunk, 0, bright(new_content))
-        else
-          List.replace_at(chunk, 0, bright(new_content))
-        end
+      # function_definition = metadata[:origin]
 
-      IO.puts(
-        "#{show_file_line(file_path, line_number)} #{show_function(function_definition)} #{if operation == :insert, do: "missing version", else: "outdated version"}"
-      )
+      # needed_change =
+      #   if operation == :insert do
+      #     List.insert_at(chunk, 0, bright(new_content))
+      #   else
+      #     List.replace_at(chunk, 0, bright(new_content))
+      #   end
 
-      IO.puts(Enum.join(needed_change, "\n"))
+      # IO.puts(
+      #   "#{show_file_line(file_path, line_number)} #{show_function(function_definition)} #{if operation == :insert, do: "missing version", else: "outdated version"}"
+      # )
+
+      # IO.puts(Enum.join(needed_change, "\n"))
     end)
+  end
+
+  defp update_text(%SourceFile{path: file_path} = source_file, {operation, {_, line_number}, new_content, metadata}) do
+    chunk = SourceFile.get_chunk(source_file, line_number: line_number, lines: 3)
+
+    function_definition = metadata[:origin]
+
+    needed_change =
+      if operation == :insert do
+        List.insert_at(chunk, 0, bright(new_content))
+      else
+        List.replace_at(chunk, 0, bright(new_content))
+      end
+
+      "#{show_file_line(file_path, line_number)} #{show_function(function_definition)} #{if operation == :insert, do: "missing version", else: "outdated version"}\n" <> Enum.join(needed_change, "\n")
+  end
+
+  defp update_text(%SourceFile{path: file_path}, {operation, _location, {key, value}, metadata}) do
+    new_content = "#{inspect(key)} => #{inspect(value)},"
+
+    function_definition = metadata[:origin]
+
+    "#{show_file_line(file_path, nil)} #{show_function(function_definition)} #{if operation == :insert, do: "missing version", else: "outdated version"}\n" <> bright(new_content)
   end
 
   defp show_errors(errors) do
