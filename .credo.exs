@@ -23,7 +23,7 @@
         #
         included: [
           "lib/",
-          "test/",
+          "test/"
         ],
         excluded: [~r"/_build/", ~r"/deps/", ~r"/node_modules/", "test/support/version_files/versions_empty.exs"]
       },
