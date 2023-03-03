@@ -18,7 +18,7 @@ defmodule Scapa.CLI do
     files_patterns
     |> load_source_files()
     |> unwrap(fn source_files ->
-      sync = get_sync(config, source_files)
+      sync = sync_from_config(config, source_files)
 
       {:ok,
        source_files
@@ -36,7 +36,7 @@ defmodule Scapa.CLI do
     files_patterns
     |> load_source_files()
     |> unwrap(fn source_files ->
-      sync = get_sync(config, source_files)
+      sync = sync_from_config(config, source_files)
 
       {:ok,
        source_files
@@ -89,6 +89,6 @@ defmodule Scapa.CLI do
     end
   end
 
-  defp get_sync(%Config{store: :tags}, source_files), do: TagsSync.new(source_files)
-  defp get_sync(config, _source_files), do: VersionsFileSync.new(config)
+  defp sync_from_config(%Config{store: :tags}, source_files), do: TagsSync.new(source_files)
+  defp sync_from_config(config, _source_files), do: VersionsFileSync.new(config)
 end
