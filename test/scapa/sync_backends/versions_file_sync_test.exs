@@ -3,8 +3,8 @@ defmodule Scapa.VersionsFileSyncTest do
 
   alias Scapa.FunctionDefinition
   alias Scapa.SourceFile
-  alias Scapa.SyncService
   alias Scapa.SyncBackends.VersionsFileSync
+  alias Scapa.SyncService
 
   @file_path "versions.exs"
 

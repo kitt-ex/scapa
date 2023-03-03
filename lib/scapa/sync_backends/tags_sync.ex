@@ -1,8 +1,9 @@
 defmodule Scapa.SyncBackends.TagsSync do
+  @moduledoc false
   alias Scapa.FunctionDefinition
   alias Scapa.SourceFile
-  alias Scapa.SyncService
   alias Scapa.SyncBackends.TagsSync
+  alias Scapa.SyncService
   alias Scapa.VersionCalculator
 
   defstruct [:versions, changeset: []]

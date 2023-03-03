@@ -3,8 +3,8 @@ defmodule Scapa.TagsSyncTest do
 
   alias Scapa.FunctionDefinition
   alias Scapa.SourceFile
-  alias Scapa.SyncService
   alias Scapa.SyncBackends.TagsSync
+  alias Scapa.SyncService
 
   describe "new/1" do
     test "returns the calculated versions for the source files" do
@@ -18,10 +18,16 @@ defmodule Scapa.TagsSyncTest do
             version: "old_efgh",
             signature: {Module, :b, 2, "a(c, d)"}
           }
-        ],
+        ]
       }
 
-      assert %TagsSync{changeset: [], versions: %{{Module, :a, 1, "a(b)"} => "NjEyMDM5NTc", {Module, :b, 2, "a(c, d)"} => "NzQ1OTc1NDQ"}} = TagsSync.new([source_file])
+      assert %TagsSync{
+               changeset: [],
+               versions: %{
+                 {Module, :a, 1, "a(b)"} => "NjEyMDM5NTc",
+                 {Module, :b, 2, "a(c, d)"} => "NzQ1OTc1NDQ"
+               }
+             } = TagsSync.new([source_file])
     end
   end
 

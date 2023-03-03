@@ -1,4 +1,5 @@
 defmodule Scapa.SyncBackends.VersionsFileSync do
+  @moduledoc false
   alias Scapa.Config
   alias Scapa.FunctionDefinition
   alias Scapa.SourceFile
