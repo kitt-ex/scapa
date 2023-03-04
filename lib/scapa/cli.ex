@@ -2,12 +2,10 @@ defmodule Scapa.CLI do
   @moduledoc false
 
   alias Scapa.Config
-  alias Scapa.FunctionDefinition
   alias Scapa.SourceFile
-
-  @type change ::
-          {SourceFile.operation(), FunctionDefinition.t(), SourceFile.line_number(),
-           SourceFile.content(), SourceFile.content_line()}
+  alias Scapa.SyncBackends.TagsSync
+  alias Scapa.SyncBackends.VersionsFileSync
+  alias Scapa.SyncService
 
   @type error :: {:error, term(), SourceFile.path()}
 
@@ -15,41 +13,36 @@ defmodule Scapa.CLI do
   Generates versions for files based on the given configuration.
   """
   @doc version: "MzQwMTI5OTU"
-  @spec generate_versions(Config.t()) :: {:ok, [SourceFile.t()]} | {:error, [error()]}
-  def generate_versions(%Config{include: files_patterns}) do
-    source_files = load_source_files(files_patterns)
+  @spec generate_versions(Config.t()) :: {:ok, SyncService.t()} | {:error, [error()]}
+  def generate_versions(%Config{include: files_patterns} = config) do
+    files_patterns
+    |> load_source_files()
+    |> unwrap(fn source_files ->
+      sync = sync_from_config(config, source_files)
 
-    case Enum.filter(source_files, &(elem(&1, 0) == :error)) do
-      [] ->
-        {:ok,
-         source_files
-         |> Enum.map(&elem(&1, 1))
-         |> Enum.map(&SourceFile.generate_doc_version_changes/1)}
-
-      errors ->
-        {:error, errors}
-    end
+      {:ok,
+       source_files
+       |> Enum.reduce(sync, &SyncService.sync_steps(&2, &1))}
+    end)
   end
 
   @doc """
   Returns up to date and outdated versions for functions based on the given configuration.
   """
   @doc version: "MTE5ODExODg"
-  @spec check_versions(Config.t()) :: {:ok, [change()]} | {:error, [error()]}
-  def check_versions(%Config{include: files_patterns}) do
-    source_files = load_source_files(files_patterns)
+  @spec check_versions(Config.t()) ::
+          {:ok, [{SourceFile.t(), SyncService.change()}]} | {:error, [error()]}
+  def check_versions(%Config{include: files_patterns} = config) do
+    files_patterns
+    |> load_source_files()
+    |> unwrap(fn source_files ->
+      sync = sync_from_config(config, source_files)
 
-    case Enum.filter(source_files, &(elem(&1, 0) == :error)) do
-      [] ->
-        {:ok,
-         source_files
-         |> Enum.map(&elem(&1, 1))
-         |> Enum.map(&SourceFile.generate_doc_version_changes/1)
-         |> Enum.map(&get_changes_to_make/1)}
-
-      errors ->
-        {:error, errors}
-    end
+      {:ok,
+       source_files
+       |> Enum.reduce(sync, &SyncService.sync_steps(&2, &1))
+       |> get_changes_to_make(source_files)}
+    end)
   end
 
   defp load_source_files(file_patterns) do
@@ -65,16 +58,37 @@ defmodule Scapa.CLI do
     end)
   end
 
-  defp get_changes_to_make(%SourceFile{changeset: changeset} = source_file) do
-    updates =
-      changeset
-      |> Enum.map(fn {operation, line_number, new_content, metadata} ->
-        chunk = SourceFile.get_chunk(source_file, line_number: line_number, lines: 3)
+  defp get_changes_to_make(%TagsSync{} = sync, source_files) do
+    changes = Enum.group_by(sync.changeset, fn {_, {source_file, _}, _, _} -> source_file end)
 
-        {operation, metadata[:origin], line_number, chunk, new_content}
-      end)
-      |> Enum.sort_by(fn {_, _, line_number, _, _} -> line_number end)
+    Enum.map(source_files, fn source_file ->
+      local_changes =
+        changes
+        |> Map.get(source_file, [])
+        |> Enum.sort_by(fn {_, {_, line_number}, _, _} -> line_number end)
 
-    {source_file, updates}
+      {source_file, local_changes}
+    end)
   end
+
+  defp get_changes_to_make(%VersionsFileSync{changeset: changeset} = sync, _source_files) do
+    [source_file] = SyncService.apply_changeset(sync)
+
+    [{source_file, changeset}]
+  end
+
+  defp unwrap(results, on_success) do
+    case Enum.filter(results, &(elem(&1, 0) == :error)) do
+      [] ->
+        results
+        |> Enum.map(&elem(&1, 1))
+        |> on_success.()
+
+      errors ->
+        {:error, errors}
+    end
+  end
+
+  defp sync_from_config(%Config{store: :tags}, source_files), do: TagsSync.new(source_files)
+  defp sync_from_config(config, _source_files), do: VersionsFileSync.new(config)
 end
