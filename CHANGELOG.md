@@ -2,6 +2,7 @@
 ## master (unreleased)
 
 ### New features
+- Allows storing versions on a dedicated file
 - Version macro docs
 - Does not override unchanged files
 - Shows errors per file

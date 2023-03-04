@@ -2,7 +2,8 @@ defmodule Mix.Tasks.Scapa.Gen.Versions do
   @shortdoc "Generates or updates doc versions"
   @moduledoc """
   Generates versions for all `@doc` tags that are not false, if a version has
-  already been generated then it's updated with a new value if needed.
+  already been generated then it's updated with a new value if needed. The place
+  where the version will be stored is based on the project configuration.
   """
 
   use Mix.Task
