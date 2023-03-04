@@ -1,7 +1,12 @@
 defmodule Mix.Tasks.Scapa do
   @shortdoc "Validates that doc versions are up to date"
   @moduledoc """
-  TODO
+  Gets the latest stored version of the documented functions
+  based on the project config and arguments and compares it to
+  the current status of the project source files. If there's functions with
+  missing or outdated documentation it reports them so that they can be updated.
+
+  This task does not modify any files.
   """
 
   use Mix.Task
