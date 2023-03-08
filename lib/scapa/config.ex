@@ -23,8 +23,10 @@ defmodule Scapa.Config do
   options defined there should all be present in the Config struct.
   """
   @spec fetch_config(path) :: t()
-  @doc version: "NjkwNDAzODQ"
-  def fetch_config(path \\ @config_path) do
+  @doc version: "NzE4NDQ0NTg"
+  def fetch_config(path \\ nil) do
+    path = path || @config_path
+
     @default_config
     |> merge_project_config(path)
     |> format_config()

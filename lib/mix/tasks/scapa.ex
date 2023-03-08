@@ -7,6 +7,9 @@ defmodule Mix.Tasks.Scapa do
   missing or outdated documentation it reports them so that they can be updated.
 
   This task does not modify any files.
+
+  ## Command line options:
+    - `--config-file` `-c` path to the config file to use. Defaults to .scapa.exs
   """
 
   use Mix.Task
@@ -18,8 +21,11 @@ defmodule Mix.Tasks.Scapa do
   alias Scapa.SourceFile
 
   @doc false
-  def run(_argv) do
-    config = Config.fetch_config()
+  def run(argv) do
+    {parsed, _argv, _errors} =
+      OptionParser.parse(argv, aliases: [c: :config_file], strict: [config_file: :string])
+
+    config = Config.fetch_config(parsed[:config_file])
 
     case Scapa.CLI.check_versions(config) do
       {:ok, updates} ->

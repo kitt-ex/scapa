@@ -15,10 +15,10 @@ defmodule Scapa.SourceFileTest do
     end
   end
 
-  describe "writtable_contents/1" do
+  describe "writtable_conwriteable_contentstents/1" do
     test "returns the contents as a concatenated string" do
       assert ~s{123\nabc\nxyz\n789} =
-               SourceFile.writtable_contents(%SourceFile{contents: ["123", "abc", "xyz", "789"]})
+               SourceFile.writeable_contents(%SourceFile{contents: ["123", "abc", "xyz", "789"]})
     end
   end
 
