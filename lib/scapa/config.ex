@@ -22,7 +22,7 @@ defmodule Scapa.Config do
   default config. The default path for the config file is ".scapa.exs" and all
   options defined there should all be present in the Config struct.
   """
-  @spec fetch_config(path) :: t()
+  @spec fetch_config(path | nil) :: t()
   @doc version: "NzE4NDQ0NTg"
   def fetch_config(path \\ nil) do
     path = path || @config_path
