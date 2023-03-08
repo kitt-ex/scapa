@@ -4,6 +4,9 @@ defmodule Mix.Tasks.Scapa.Gen.Versions do
   Generates versions for all `@doc` tags that are not false, if a version has
   already been generated then it's updated with a new value if needed. The place
   where the version will be stored is based on the project configuration.
+
+  ## Command line options:
+    - `--config-file` `-c` path to the config file to use. Defaults to .scapa.exs
   """
 
   use Mix.Task
@@ -16,8 +19,11 @@ defmodule Mix.Tasks.Scapa.Gen.Versions do
 
   @doc false
   @impl Mix.Task
-  def run(_argv) do
-    config = Config.fetch_config()
+  def run(argv) do
+    {parsed, _argv, _errors} =
+      OptionParser.parse(argv, aliases: [c: :config_file], strict: [config_file: :string])
+
+    config = Config.fetch_config(parsed[:config_file])
 
     case Scapa.CLI.generate_versions(config) do
       {:ok, sync} -> override_files(sync)
@@ -29,7 +35,7 @@ defmodule Mix.Tasks.Scapa.Gen.Versions do
     sync
     |> SyncService.apply_changeset()
     |> Enum.each(fn %SourceFile{path: path} = source_file ->
-      File.write!(path, SourceFile.writtable_contents(source_file))
+      File.write!(path, SourceFile.writeable_contents(source_file))
     end)
   end
 

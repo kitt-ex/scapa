@@ -1,4 +1,3 @@
 [
-  include: "lib/**/*.ex",
-  # store: :file
+  include: "lib/**/*.ex"
 ]

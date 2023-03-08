@@ -39,15 +39,15 @@ defmodule Scapa.SourceFile do
     ## Examples
 
       iex> source_file = %Scapa.SourceFile{contents: ["123", "abc", "xyz", "789"]}
-      ...> Scapa.SourceFile.writtable_contents(source_file)
+      ...> Scapa.SourceFile.writeable_contents(source_file)
       "123
       abc
       xyz
       789"
   """
-  @spec writtable_contents(Scapa.SourceFile.t()) :: String.t()
-  @doc version: "OTYxNDg1Mzk"
-  def writtable_contents(%SourceFile{contents: contents}), do: Enum.join(contents, "\n")
+  @spec writeable_contents(Scapa.SourceFile.t()) :: String.t()
+  @doc version: "OTM4MzI4Ng"
+  def writeable_contents(%SourceFile{contents: contents}), do: Enum.join(contents, "\n")
 
   @doc """
   Returns a SourceFile representing the file on the given path.
@@ -96,7 +96,7 @@ defmodule Scapa.SourceFile do
 
     iex> source_file = %Scapa.SourceFile{contents: ["123", "abc", "xyz", "789"]}
     ...> source_file = Scapa.SourceFile.replace(source_file, 2, "replaced")
-    ...> Scapa.SourceFile.writtable_contents(source_file)
+    ...> Scapa.SourceFile.writeable_contents(source_file)
     "123
     abc
     replaced
@@ -115,7 +115,7 @@ defmodule Scapa.SourceFile do
 
     iex> source_file = %Scapa.SourceFile{contents: ["123", "abc", "xyz", "789"]}
     ...> source_file = Scapa.SourceFile.insert(source_file, 2, "inserted")
-    ...> Scapa.SourceFile.writtable_contents(source_file)
+    ...> Scapa.SourceFile.writeable_contents(source_file)
     "123
     abc
     inserted

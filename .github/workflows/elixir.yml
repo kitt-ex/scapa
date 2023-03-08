@@ -49,6 +49,10 @@ jobs:
         run: mix format --check-formatted
       - name: Run Credo
         run: mix credo --strict
+      - name: Run self
+        run: mix scapa
+      - name: Run self on files
+        run: mix scapa -c .scapa-file-store.exs
       - name: Run tests and check coverage
         run: mix coveralls
       - name: Generate coverage report to be published to coveralls.io
