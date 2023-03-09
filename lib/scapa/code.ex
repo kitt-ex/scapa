@@ -57,6 +57,21 @@ defmodule Scapa.Code do
     |> elem(1)
   end
 
+  @doc """
+  Returns the prettified representation of the term, ready to be written to a file.
+
+  ## Example
+    iex> Scapa.Code.stringify([include: "lib/**/*.ex", store: :tags])
+    ~s([include: "lib/**/*.ex", store: :tags])
+
+  """
+  @spec stringify(term()) :: String.t()
+  @doc version: "MTAyNzU5NjQ1"
+  def stringify(term) do
+    term
+    |> inspect(pretty: true)
+  end
+
   defp functions_defined_in_source(module_source) do
     update_known_functions = fn known_functions, func_name, args, metadata ->
       arity = args |> List.wrap() |> Enum.count()

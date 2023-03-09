@@ -10,11 +10,6 @@ defmodule Scapa.Config do
 
   defstruct [:include, :store]
 
-  @config_path ".scapa.exs"
-  @default_config [
-    include: "lib/**/*.ex",
-    store: :tags
-  ]
   @default_versions_file "priv/doc_versions.exs"
 
   @doc """
@@ -22,16 +17,41 @@ defmodule Scapa.Config do
   default config. The default path for the config file is ".scapa.exs" and all
   options defined there should all be present in the Config struct.
   """
-  @spec fetch_config(path | nil) :: t()
-  @doc version: "NzE4NDQ0NTg"
-  def fetch_config(path \\ nil) do
-    path = path || @config_path
-
-    @default_config
+  @spec fetch_config(path) :: t()
+  @doc version: "NzE2NTY5NDc"
+  def fetch_config(path) do
+    default_config()
     |> merge_project_config(path)
     |> format_config()
     |> then(&struct!(__MODULE__, &1))
   end
+
+  @doc """
+  Returns the default configuration options
+
+  ### Example
+    iex> Scapa.Config.default_config()
+    [include: "lib/**/*.ex", store: :tags]
+  """
+  @spec default_config :: Keyword.t()
+  @doc version: "Mzg3NDgyMg"
+  def default_config do
+    [
+      include: "lib/**/*.ex",
+      store: :tags
+    ]
+  end
+
+  @doc """
+  Returns the default config file path
+
+  ### Example
+    iex> Scapa.Config.default_config_path()
+    ".scapa.exs"
+  """
+  @spec default_config_path :: path()
+  @doc version: "NTEwNjkzNTk"
+  def default_config_path, do: ".scapa.exs"
 
   @doc """
   Returns the path where the function versions should be stored or raises

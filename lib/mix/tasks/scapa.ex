@@ -25,7 +25,7 @@ defmodule Mix.Tasks.Scapa do
     {parsed, _argv, _errors} =
       OptionParser.parse(argv, aliases: [c: :config_file], strict: [config_file: :string])
 
-    config = Config.fetch_config(parsed[:config_file])
+    config = Config.fetch_config(parsed[:config_file] || Config.default_config_path())
 
     case Scapa.CLI.check_versions(config) do
       {:ok, updates} ->
