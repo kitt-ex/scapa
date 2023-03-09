@@ -1,5 +1,6 @@
 defmodule Scapa.ConfigTest do
   use ExUnit.Case, async: true
+  doctest Scapa.Config
 
   alias Scapa.Config
 

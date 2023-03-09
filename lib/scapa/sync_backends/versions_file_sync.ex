@@ -120,7 +120,7 @@ defmodule Scapa.SyncBackends.VersionsFileSync do
 
     defp stringify_versions(versions) do
       versions
-      |> inspect(pretty: true)
+      |> Scapa.Code.stringify()
       |> String.split("\n")
       |> then(&(&1 ++ ["\n"]))
     end

@@ -2,6 +2,7 @@
 ## master (unreleased)
 
 ### New features
+- Add `mix scapa.gen.config` to create the initial config file
 - Allows storing versions on a dedicated file
 - Version macro docs
 - Does not override unchanged files

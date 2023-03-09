@@ -121,6 +121,8 @@ The default configuration looks like this
 ]
 ```
 
+You can run `mix scapa.gen.config` to have this file created automatically for you.
+
 ## Contributing
 1. Fork it!
 1. Create your feature branch (`git checkout -b my-new-feature`)
