@@ -10,10 +10,11 @@ defmodule Scapa.FunctionDefinition do
   @type t :: %__MODULE__{
           signature: signature(),
           version: nil | version(),
-          position: position()
+          position: position(),
+          doc: String.t()
         }
 
-  defstruct [:signature, :version, :position]
+  defstruct [:signature, :version, :position, :doc]
 
   @doc """
   Returns the line number for a function definition

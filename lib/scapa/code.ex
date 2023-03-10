@@ -21,11 +21,12 @@ defmodule Scapa.Code do
       has_doc?(function_doc) && defined_in_source?(function_doc, source_functions)
     end)
     |> Enum.map(fn
-      {{_, name, arity}, _, [string_signature], _, metadata} ->
+      {{_, name, arity}, _annotation, [string_signature], doc_content, metadata} ->
         %FunctionDefinition{
           signature: {module, name, arity, string_signature},
           version: metadata[:version],
-          position: function_position!({name, arity}, source_functions)
+          position: function_position!({name, arity}, source_functions),
+          doc: doc_content["en"]
         }
     end)
   end

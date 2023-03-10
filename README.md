@@ -95,9 +95,11 @@ versioned and which functions have changed so you may revise the documentation f
 ...
 File lib/your_project/config.ex is up to date.
 File lib/your_project/user.ex has a function with a missing or outdated version number.
-lib/your_project/user.ex:16: User.get_user/1 outdated version
+lib/your_project/user.ex:16: User.get_user/1 doc version is outdated. Current docs are:
+  Gets a user from a user_id
+  Check if the documentation is up to date and then update the doc version to:
   @doc version: "ODgwNzQxMg"
-  def get_user(user_id) do
+  def get_user(query) do
     # ...
 ```
 

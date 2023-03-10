@@ -64,7 +64,7 @@ defmodule Mix.Tasks.Scapa do
         List.replace_at(chunk, 0, bright(new_content))
       end
 
-    "#{show_file_line(file_path, line_number)} #{show_function(function_definition)} #{if operation == :insert, do: "missing version", else: "outdated version"}\n" <>
+    "#{bright(show_file_line(file_path, line_number))} #{bright(show_function(function_definition))} #{prompt_text(operation, function_definition)}\n" <>
       Enum.join(needed_change, "\n")
   end
 
@@ -73,8 +73,13 @@ defmodule Mix.Tasks.Scapa do
 
     function_definition = metadata[:origin]
 
-    "#{show_file_line(file_path, nil)} #{show_function(function_definition)} #{if operation == :insert, do: "missing version", else: "outdated version"}\n" <>
+    "#{bright(show_file_line(file_path, nil))} #{bright(show_function(function_definition))} #{prompt_text(operation, function_definition)}\n" <>
       bright(new_content)
+  end
+
+  defp prompt_text(:insert, _function_definition), do: bright("doc version is missing. Add to start tracking documentation versions:")
+  defp prompt_text(_, %FunctionDefinition{doc: doc}) do
+    bright("doc version is outdated. Current docs are:\n\n") <> doc <> bright("Check if the documentation is up to date and then update the doc version to:")
   end
 
   defp show_errors(errors) do
