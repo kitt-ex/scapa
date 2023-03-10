@@ -77,9 +77,13 @@ defmodule Mix.Tasks.Scapa do
       bright(new_content)
   end
 
-  defp prompt_text(:insert, _function_definition), do: bright("doc version is missing. Add to start tracking documentation versions:")
+  defp prompt_text(:insert, _function_definition),
+    do: bright("doc version is missing. Add to start tracking documentation versions:")
+
   defp prompt_text(_, %FunctionDefinition{doc: doc}) do
-    bright("doc version is outdated. Current docs are:\n\n") <> doc <> bright("Check if the documentation is up to date and then update the doc version to:")
+    bright("doc version is outdated. Current docs are:\n\n") <>
+      doc <>
+      bright("Check if the documentation is up to date and then update the doc version to:")
   end
 
   defp show_errors(errors) do
